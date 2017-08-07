@@ -1,1 +1,32 @@
-test
+<script src="/socket.io/socket.io.js"></script>
+
+
+<input type="text" placeholder="tweet id" id="id" />
+<input type="button" value="run" id="run" />
+
+
+<script defer>
+    const socket = io(location.href.replace('http', 'ws'), {
+        transports: ['websocket']
+    });
+
+    socket.on('log', function(msg) {
+
+        console.info(msg);
+
+    });
+
+    //
+    document.querySelector('#run').addEventListener('click', function() {
+
+        const id = document.querySelector('#id').value;
+
+        socket.emit('ss', id);
+
+
+    });
+
+    socket.on('error', function(msg) {
+        console.error(msg);
+    });
+</script>
