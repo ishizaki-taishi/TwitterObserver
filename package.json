@@ -5,6 +5,7 @@
     "start": "node-dev main.js"
   },
   "dependencies": {
+    "express": "^4.15.4",
     "twitter": "^1.7.1"
   },
   "devDependencies": {
