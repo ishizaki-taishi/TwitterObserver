@@ -2,14 +2,20 @@ const port = process.env.PORT || 3000;
 
 const app = require('express')();
 const http = require('http').Server(app);
-
-
-
-
 const io = require('socket.io')(http);
 
 io.listen(http);
 
+
+const MAX_REQUEST_COUNT = 300;
+
+
+
+const interval = Math.floor(60 * 15 / (MAX_REQUEST_COUNT * 0.5) * 1000);
+
+const RequestInterval = {
+    StatusesRetweetersIds: 30000
+};
 
 const path = require('path');
 
@@ -27,7 +33,152 @@ const client = new Twitter({
 });
 
 
+
+const { Pool, Client } = require('pg')
+const connectionString = process.env.DATABASE_URL || databaseURL;
+const pool = new Pool({
+    connectionString: connectionString,
+    ssl: true
+});
+const dbClient = new Client({
+    connectionString: connectionString,
+    ssl: true
+
+});
+dbClient.connect()
+
+
+
+
+
+
+
+let observeTweets = [];
+
+
+function updateObserveTweets() {
+
+
+    // 監視するツイート一覧を取得する
+    dbClient.query('SELECT * FROM observe_tweets', (err, result) => {
+
+        observeTweets = result.rows.map((row) => row.id);
+
+        console.log(observeTweets);
+
+    });
+
+}
+
+
+
+updateObserveTweets();
+
+
+
+
+async function getRT() {
+
+    //    return;
+
+    io.emit('log', 'DB Connection' + connectionString);
+
+    io.emit('observe-tweets', observeTweets);
+
+
+    try {
+
+
+        for (const id of observeTweets) {
+
+            io.emit('log', id);
+
+            const targetID = id;
+
+            // RT 情報を取得する
+            // const response = await get('statuses/retweeters/ids', { id, stringify_ids: true });
+            const response = await get('statuses/retweets/' + id, { id, count: 100, trim_user: false });
+
+            const users = response.map((status) => status.user);
+
+
+
+            users.forEach((user) => {
+
+                const { id } = user;
+
+                dbClient.query(`INSERT INTO retweeters (id, target_id) VALUES (${id}, ${targetID})`, (err, res) => {
+
+                    io.emit('log', { err, res });
+
+                });
+
+            });
+
+            io.emit('log', users);
+
+
+
+        }
+    } catch (e) {
+        console.error(e);
+        io.emit('error', e);
+    }
+
+}
+
+
+// setInterval(getRT, RequestInterval.StatusesRetweetersIds);
+
+
+
+
+console.log(setInterval);
+console.log(RequestInterval.StatusesRetweetersIds);
+
 io.sockets.on('connection', (socket) => {
+
+
+    // beta
+    getRT();
+
+    io.emit('log', `API Interval: ${interval}`);
+
+
+    socket.on('add-target-tweet', (id) => {
+
+        dbClient.query(`INSERT INTO observe_tweets (id) VALUES (${id})`, (err, res) => {
+
+            updateObserveTweets();
+
+            io.emit('log', { err, res });
+
+        });
+
+    });
+
+
+    socket.on('remove-target-tweet', (id) => {
+
+        console.info('remove: ' + id);
+
+        dbClient.query(`DELETE FROM observe_tweets WHERE id = '${id}'`, (err, res) => {
+
+
+            updateObserveTweets();
+
+
+            io.emit('log', { err, res });
+
+            console.log(err, res);
+
+        });
+
+    });
+
+
+
+
 
 
     socket.on('ss', (id) => {
@@ -37,18 +188,7 @@ io.sockets.on('connection', (socket) => {
         };
 
 
-        /*
 
-
-            */
-        /*
-                client.get('statuses/show', params, (error, tweets, response) => {
-
-                    io.emit('log', { error, tweets, response });
-
-                });
-
-                */
 
         params.stringify_ids = true;
 
@@ -84,10 +224,7 @@ io.sockets.on('connection', (socket) => {
     });
 
 
-    return;
-    socket.on('msg', function(data) {
-        io.sockets.emit('msg', data);
-    });
+
 });
 
 function get(api, params) {
@@ -110,38 +247,3 @@ app.get('/', async(req, res) => {
 http.listen(port, function() {
     console.log('Example app listening on port 3000!');
 });
-
-
-
-
-
-
-(() => {
-
-
-    const { Pool, Client } = require('pg')
-    const connectionString = process.env.DATABASE_URL || databaseURL; //'postgresql://dbuser:secretpassword@database.server.com:3211/mydb'
-
-    io.emit('log', connectionString);
-
-    const pool = new Pool({
-        connectionString: connectionString,
-        ssl: true
-    });
-
-
-
-    const client = new Client({
-        connectionString: connectionString,
-        ssl: true
-
-    });
-
-    client.connect()
-
-    client.query('SELECT NOW()', (err, res) => {
-        console.log(err, res);
-        client.end();
-    });
-
-})();
