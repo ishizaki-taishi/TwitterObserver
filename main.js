@@ -201,6 +201,42 @@ getRT();
 setInterval(getRT, RequestInterval.StatusesRetweetersIds);
 
 
+
+async function fetchUserStatus() {
+
+    const w = await query('SELECT * FROM retweeters WHERE invalid IS NULL LIMIT 1');
+
+    if (w.error) return;
+
+    const userID = w.response.rows[0].id;
+
+
+    try {
+
+        const { name, screen_name } = await get('users/show', { user_id: userID });
+
+        const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', invalid = FALSE WHERE id = '${userID}'`);
+        console.log('ユーザー名を取得しました', userID, r);
+    }
+
+    // ユーザーが存在しない
+    catch (e) {
+
+        const r = await query(`UPDATE retweeters SET invalid = TRUE WHERE id = '${userID}'`);
+        console.log('ユーザー名の取得に失敗しました', userID, r);
+
+    }
+
+
+
+
+}
+
+
+fetchUserStatus();
+setInterval(fetchUserStatus, 5000);
+
+
 io.sockets.on('connection', async(socket) => {
 
 
@@ -239,7 +275,7 @@ io.sockets.on('connection', async(socket) => {
 
     (async() => {
 
-        const { response } = await query(`SELECT * FROM retweeters`);
+        const { response } = await query(`SELECT * FROM retweeters WHERE invalid IS NULL OR invalid = FALSE`);
 
         io.emit('retweeters', response.rows);
 
