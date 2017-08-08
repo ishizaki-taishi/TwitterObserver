@@ -3,10 +3,29 @@
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 
-<input type="text" placeholder="tweet id" id="id" />
-<input type="button" value="Add" id="add" />
-
 <style>
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .header {
+        position: fixed;
+        background: #fff; /*rgba(0, 0, 0, .5);*/
+        top: 0;
+        left: 0;
+        box-shadow: 0 0 4px #000;
+        width: 100vw;
+        padding: .5rem;
+        color: #7cf;
+        border-bottom: solid 4px #7cf;
+    }
+
+    .user {
+        border-bottom: solid 1px #ccc;
+    }
+
     .flex-container {
         display: flex;
         flex-direction: row;
@@ -20,33 +39,46 @@
         background: #eee;
         height: 100vh;
 
-        box-shadow: 0 0 10px #000 inset;
+        /*box-shadow: 0 0 10px #000 inset;*/
+    }
+
+    .flex-item {
+        padding: 1rem;
     }
 
     .flex-item:nth-child(1) {
-        -webkit-order: 0;
-        -ms-flex-order: 0;
-        order: 0;
-        -webkit-flex: 1 1 auto;
-        -ms-flex: 1 1 auto;
-        flex: 1 1 auto;
-        -webkit-align-self: stretch;
-        -ms-flex-item-align: stretch;
-        align-self: stretch;
+
+        overflow-y: scroll;
+        max-width: 30vw;
     }
 
     .flex-item:nth-child(2) {
-        -webkit-order: 0;
-        -ms-flex-order: 0;
+
         order: 0;
-        -webkit-flex: 1 1 auto;
-        -ms-flex: 1 1 auto;
+
         flex: 1 1 auto;
-        -webkit-align-self: stretch;
-        -ms-flex-item-align: stretch;
-        align-self: stretch;
+
+        overflow-y: scroll;
+        max-width: 50%;
+        /*align-self: stretch;*/
     }
 </style>
+
+
+<div class="flex-container" style="background=red">
+    <div id="left" class="flex-item" style="color=blue"></div>
+    <div id="log" class="flex-item" style="color=blue"></div>
+</div>
+
+
+<div class="header">
+    <span style="font-size:2rem">aa</span>
+
+    <input type="text" placeholder="tweet id" id="id" />
+    <input type="button" value="Add" id="add" />
+
+</div>
+
 
 <script defer>
     const socket = io(location.href.replace('http', 'ws'), {
@@ -55,6 +87,8 @@
 
     window.socket = socket;
 
+
+    const left = document.querySelector('#left');
 
     /*
     const errorImpl = console.error;
@@ -110,7 +144,7 @@
 
             twttr.widgets.load(div);
 
-            document.body.appendChild(div);
+            left.appendChild(div);
 
         }
 
@@ -128,9 +162,14 @@
 
             const div = document.createElement('div');
             div.innerHTML = `
+
+            <div class="user">
                 ${JSON.stringify(retweeter)}
+            </div>
+
             `;
             parent.appendChild(div);
+
 
         }
 
@@ -153,13 +192,3 @@
         console.error(msg);
     });
 </script>
-
-
-
-
-<div class="flex-container" style="background=red">
-    <div id="left" class="flex-item" style="color=blue">a</div>
-    <div id="log" class="flex-item" style="color=blue">a</div>
-
-
-</div>

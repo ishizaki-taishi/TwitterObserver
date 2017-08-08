@@ -70,15 +70,12 @@ function query(query) {
 
 
 let lastRetweetUserID = null;
-
+/*
 dbClient.query(`SELECT id FROM retweeters ORDER BY created_at DESC LIMIT 3`, (e, res) => {
-
     lastRetweetUserID = res.rows[0].id;
-
     lastRetweetUserID = '894812207384379392';
-
 });
-
+*/
 
 /* 重複削除
 
