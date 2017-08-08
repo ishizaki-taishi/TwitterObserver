@@ -10,6 +10,11 @@ io.listen(http);
 const MAX_REQUEST_COUNT = 300;
 
 
+function escapeSQL(text) {
+    return text.replace(/'/g, `''`);
+}
+
+
 
 const interval = Math.floor(60 * 15 / (MAX_REQUEST_COUNT * 0.5) * 1000);
 
@@ -213,7 +218,9 @@ async function fetchUserStatus() {
 
     try {
 
-        const { name, screen_name } = await get('users/show', { user_id: userID });
+        let { name, screen_name } = await get('users/show', { user_id: userID });
+
+        name = escapeSQL(name);
 
         const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', invalid = FALSE WHERE id = '${userID}'`);
         console.log('ユーザー名を取得しました', userID, r);
