@@ -49,8 +49,14 @@ dbClient.connect()
 
 
 
+/* 重複削除
 
+CREATE TEMPORARY TABLE fruits3_tmp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
+DELETE FROM retweeters;
+INSERT INTO retweeters SELECT * FROM fruits3_tmp;
+DROP TABLE fruits3_tmp;
 
+*/
 
 
 let observeTweets = [];
@@ -81,9 +87,27 @@ async function getRT() {
 
     //    return;
 
+    let test = [];
+
+
+    for (const id of observeTweets) {
+
+        const { html } = await get('statuses/oembed', {
+            url: `https://twitter.com/Interior/status/${id}`
+        });
+
+
+        test.push({
+            id,
+            oembed: html
+        });
+    }
+
     io.emit('log', 'DB Connection' + connectionString);
 
-    io.emit('observe-tweets', observeTweets);
+    io.emit('observe-tweets',
+        test);
+
 
 
     try {
@@ -107,6 +131,8 @@ async function getRT() {
 
                 const { id } = user;
 
+                io.emit('log', `user id: ${id}`);
+
                 dbClient.query(`INSERT INTO retweeters (id, target_id) VALUES (${id}, ${targetID})`, (err, res) => {
 
                     io.emit('log', { err, res });
@@ -124,6 +150,24 @@ async function getRT() {
         console.error(e);
         io.emit('error', e);
     }
+
+
+
+
+    //
+    dbClient.query(`
+
+        CREATE TEMPORARY TABLE _temp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
+        DELETE FROM retweeters;
+        INSERT INTO retweeters SELECT * FROM _temp;
+        DROP TABLE _temp;
+
+        `, (err, result) => {
+
+        console.log(err, result);
+
+    });
+
 
 }
 
@@ -178,50 +222,6 @@ io.sockets.on('connection', (socket) => {
 
 
 
-
-
-
-    socket.on('ss', (id) => {
-
-        let params = {
-            id
-        };
-
-
-
-
-        params.stringify_ids = true;
-
-        client.get('statuses/retweeters/ids', params, async(e, t, r) => {
-            try {
-
-                if (e) return console.error(e);
-
-
-                for (const id of t.ids.slice(0, 5)) {
-
-
-                    const t = await get('users/show', { id });
-
-                    const { name, screen_name } = t;
-
-                    io.emit('log', `${name} @${screen_name}`);
-
-                }
-
-
-
-
-                io.emit('log', { e, t, r });
-
-            } catch (e) {
-                io.emit('error', e);
-            }
-        });
-
-
-
-    });
 
 
 

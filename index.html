@@ -1,8 +1,9 @@
 <script src="/socket.io/socket.io.js"></script>
 
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 
 <input type="text" placeholder="tweet id" id="id" />
-<input type="button" value="Run" id="run" />
 <input type="button" value="Add" id="add" />
 
 
@@ -35,18 +36,21 @@
     console.error(...args);
   });
 
-  socket.on('observe-tweets', (ids) => {
+  socket.on('observe-tweets', (tweets) => {
 
 
-
-
-    for (const id of ids) {
+    for (const {
+        id,
+        oembed
+      } of tweets) {
 
       const div = document.createElement('div');
-      div.innerHTML =
-        `
+      div.innerHTML = `
+
+
 
         <div><h1>${id}</h1>
+
 
         <input type="button" class="remove-observe-tweet" value="Remove" data-id="${id}"
 
@@ -55,9 +59,14 @@
         />
         </div>
 
+        ${oembed}
+
+
         <hr>
 
         `;
+
+        twttr.widgets.load(div);
 
       document.body.appendChild(div);
 
@@ -67,15 +76,7 @@
 
   });
 
-  //
-  document.querySelector('#run').addEventListener('click', function() {
 
-    const id = document.querySelector('#id').value;
-
-    socket.emit('ss', id);
-
-
-  });
 
 
 
@@ -87,7 +88,7 @@
     socket.emit('add-target-tweet', id);
 
 
-        location.reload();
+    location.reload();
   });
 
 
