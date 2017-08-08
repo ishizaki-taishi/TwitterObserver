@@ -6,46 +6,88 @@
 <input type="text" placeholder="tweet id" id="id" />
 <input type="button" value="Add" id="add" />
 
+<style>
+    .flex-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap-reverse;
+        justify-content: center;
+        align-content: space-around;
+        align-items: center;
+
+
+        overflow-y: scroll;
+        background: #eee;
+        height: 100vh;
+
+        box-shadow: 0 0 10px #000 inset;
+    }
+
+    .flex-item:nth-child(1) {
+        -webkit-order: 0;
+        -ms-flex-order: 0;
+        order: 0;
+        -webkit-flex: 1 1 auto;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        -webkit-align-self: stretch;
+        -ms-flex-item-align: stretch;
+        align-self: stretch;
+    }
+
+    .flex-item:nth-child(2) {
+        -webkit-order: 0;
+        -ms-flex-order: 0;
+        order: 0;
+        -webkit-flex: 1 1 auto;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        -webkit-align-self: stretch;
+        -ms-flex-item-align: stretch;
+        align-self: stretch;
+    }
+</style>
 
 <script defer>
-  const socket = io(location.href.replace('http', 'ws'), {
-    transports: ['websocket']
-  });
+    const socket = io(location.href.replace('http', 'ws'), {
+        transports: ['websocket']
+    });
 
-  window.socket = socket;
-
-
-  /*
-  const errorImpl = console.error;
-  console.error = function error(message) {
-    errorImpl.apply(this, arguments);
-    if (message.startsWith('WebSocket')) {
-      console.error('__ WebSocket Removed');
-    }
-  };
-  */
-
-  socket.on('log', function(msg) {
-
-    console.info(msg);
-
-  });
-
-  socket.on('error', (...args) => {
-
-    console.error(...args);
-  });
-
-  socket.on('observe-tweets', (tweets) => {
+    window.socket = socket;
 
 
-    for (const {
-        id,
-        oembed
-      } of tweets) {
+    /*
+    const errorImpl = console.error;
+    console.error = function error(message) {
+      errorImpl.apply(this, arguments);
+      if (message.startsWith('WebSocket')) {
+        console.error('__ WebSocket Removed');
+      }
+    };
+    */
 
-      const div = document.createElement('div');
-      div.innerHTML = `
+    socket.on('log', function(msg) {
+
+        console.info(msg);
+
+    });
+
+    socket.on('error', (...args) => {
+
+        console.error(...args);
+    });
+
+    socket.on('observe-tweets', (tweets) => {
+
+
+        for (const {
+                id,
+                oembed
+            } of tweets) {
+
+            const div = document.createElement('div');
+            div.innerHTML =
+                `
 
 
 
@@ -66,34 +108,58 @@
 
         `;
 
-        twttr.widgets.load(div);
+            twttr.widgets.load(div);
 
-      document.body.appendChild(div);
+            document.body.appendChild(div);
 
-    }
+        }
 
-    // console.info('OTIDS' + ids);
+        // console.info('OTIDS' + ids);
 
-  });
-
-
+    });
 
 
 
-  document.querySelector('#add').addEventListener('click', function() {
-    const id = document.querySelector('#id').value;
 
-    console.log('add: ', id);
+    socket.on('retweeters', (retweeters) => {
+        console.info(retweeters);
+        const parent = document.querySelector('#log');
+        for (const retweeter of retweeters) {
 
-    socket.emit('add-target-tweet', id);
+            const div = document.createElement('div');
+            div.innerHTML = `
+                ${JSON.stringify(retweeter)}
+            `;
+            parent.appendChild(div);
+
+        }
+
+    });
+
+    document.querySelector('#add').addEventListener('click', function() {
+        const id = document.querySelector('#id').value;
+
+        console.log('add: ', id);
+
+        socket.emit('add-target-tweet', id);
 
 
-    location.reload();
-  });
+        location.reload();
+    });
 
 
 
-  socket.on('error', function(msg) {
-    console.error(msg);
-  });
+    socket.on('error', function(msg) {
+        console.error(msg);
+    });
 </script>
+
+
+
+
+<div class="flex-container" style="background=red">
+    <div id="left" class="flex-item" style="color=blue">a</div>
+    <div id="log" class="flex-item" style="color=blue">a</div>
+
+
+</div>

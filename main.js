@@ -14,13 +14,22 @@ const MAX_REQUEST_COUNT = 300;
 const interval = Math.floor(60 * 15 / (MAX_REQUEST_COUNT * 0.5) * 1000);
 
 const RequestInterval = {
-    StatusesRetweetersIds: 30000
+    StatusesRetweetersIds: 180000 // 3 分
 };
 
 const path = require('path');
 
 const databaseURL = 'postgres://zsmdfzjfczrdyi:16cdebdfc49073acbdb90c47a098d14bdd4a6bf5d6ee3ca31e0ee5c3c49e4804@ec2-54-221-221-153.compute-1.amazonaws.com:5432/d4k46sqvuojehi';
 
+
+function pgFormatDate(date) {
+    /* Via http://stackoverflow.com/questions/3605214/javascript-add-leading-zeroes-to-date */
+    function zeroPad(d) {
+        return ("0" + d).slice(-2)
+    }
+    var parsed = new Date(date)
+    return [parsed.getUTCFullYear(), zeroPad(parsed.getMonth() + 1), zeroPad(parsed.getDate()), zeroPad(parsed.getHours()), zeroPad(parsed.getMinutes()), zeroPad(parsed.getSeconds())].join(" ");
+}
 
 
 const Twitter = require('twitter');
@@ -48,6 +57,28 @@ const dbClient = new Client({
 dbClient.connect()
 
 
+function query(query) {
+    return new Promise((resolve) => {
+        dbClient.query(query, (e, res) => {
+            resolve({
+                error: e,
+                response: res
+            });
+        });
+    });
+}
+
+
+let lastRetweetUserID = null;
+
+dbClient.query(`SELECT id FROM retweeters ORDER BY created_at DESC LIMIT 3`, (e, res) => {
+
+    lastRetweetUserID = res.rows[0].id;
+
+    lastRetweetUserID = '894812207384379392';
+
+});
+
 
 /* 重複削除
 
@@ -62,17 +93,11 @@ DROP TABLE fruits3_tmp;
 let observeTweets = [];
 
 
-function updateObserveTweets() {
+async function updateObserveTweets() {
 
+    const { response } = await query('SELECT * FROM observe_tweets');
 
-    // 監視するツイート一覧を取得する
-    dbClient.query('SELECT * FROM observe_tweets', (err, result) => {
-
-        observeTweets = result.rows.map((row) => row.id);
-
-        console.log(observeTweets);
-
-    });
+    observeTweets = response.rows.map((row) => row.id);
 
 }
 
@@ -85,37 +110,16 @@ updateObserveTweets();
 
 async function getRT() {
 
-    //    return;
-
-    let test = [];
-
-
-    for (const id of observeTweets) {
-
-        const { html } = await get('statuses/oembed', {
-            url: `https://twitter.com/Interior/status/${id}`
-        });
-
-
-        test.push({
-            id,
-            oembed: html
-        });
-    }
-
-    io.emit('log', 'DB Connection' + connectionString);
-
-    io.emit('observe-tweets',
-        test);
-
-
+    await updateObserveTweets();
 
     try {
 
+        console.log('監視するツイート一覧: ', observeTweets);
+
+
+        io.emit('log', 'DB Connection' + connectionString);
 
         for (const id of observeTweets) {
-
-            io.emit('log', id);
 
             const targetID = id;
 
@@ -123,25 +127,50 @@ async function getRT() {
             // const response = await get('statuses/retweeters/ids', { id, stringify_ids: true });
             const response = await get('statuses/retweets/' + id, { id, count: 100, trim_user: false });
 
-            const users = response.map((status) => status.user);
+            io.emit('log', response);
+
+
+            for (const status of response) {
+
+                const user = status.user;
+
+                // RT したユーザーの内部 ID
+                const userID = user.id_str;
+
+                console.log('UserID: ', userID);
 
 
 
-            users.forEach((user) => {
 
-                const { id } = user;
+                const r = await query(`DELETE FROM retweeters WHERE id = '${userID}'`);
 
-                io.emit('log', `user id: ${id}`);
+                if (r.response.rawCount) console.log('重複: ', r);
 
-                dbClient.query(`INSERT INTO retweeters (id, target_id) VALUES (${id}, ${targetID})`, (err, res) => {
 
-                    io.emit('log', { err, res });
 
-                });
 
-            });
+                io.emit('log', `user id: ${userID}`);
 
-            io.emit('log', users);
+
+                const createdAt = pgFormatDate(status.created_at);
+
+
+                const res = await query(`
+
+                    INSERT INTO retweeters
+                        (id, target_id, created_at)
+                        VALUES
+                        ('${userID}', '${targetID}', to_timestamp('${createdAt}', 'YYYY MM DD HH24 MI SS'))
+
+                `);
+
+
+
+            }
+
+
+            // 最後に RT したユーザーを更新
+            lastRetweetUserID = response[0].user.id_str;
 
 
 
@@ -152,41 +181,72 @@ async function getRT() {
     }
 
 
+    /*
+        dbClient.query(`
+            CREATE TEMPORARY TABLE _temp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
+            DELETE FROM retweeters;
+            INSERT INTO retweeters SELECT * FROM _temp;
+            DROP TABLE _temp;
 
+            `, (err, result) => {
+            console.log(err, result);
+        });
+    */
 
-    //
-    dbClient.query(`
-
-        CREATE TEMPORARY TABLE _temp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
-        DELETE FROM retweeters;
-        INSERT INTO retweeters SELECT * FROM _temp;
-        DROP TABLE _temp;
-
-        `, (err, result) => {
-
-        console.log(err, result);
-
-    });
 
 
 }
 
 
-// setInterval(getRT, RequestInterval.StatusesRetweetersIds);
+
+// beta
+getRT();
+setInterval(getRT, RequestInterval.StatusesRetweetersIds);
 
 
+io.sockets.on('connection', async(socket) => {
 
 
-console.log(setInterval);
-console.log(RequestInterval.StatusesRetweetersIds);
+    io.emit('log', 'Last RT: ' + lastRetweetUserID);
 
-io.sockets.on('connection', (socket) => {
-
-
-    // beta
-    getRT();
 
     io.emit('log', `API Interval: ${interval}`);
+
+
+    //    return;
+
+    let test = [];
+
+
+    for (const id of observeTweets) {
+
+        const { html } = await get('statuses/oembed', {
+            url: `https://twitter.com/_/status/${id}`
+        });
+
+
+
+        console.log('oembed');
+
+        test.push({
+            id,
+            oembed: html
+        });
+    }
+    io.emit('observe-tweets', test);
+
+
+
+
+
+
+    (async() => {
+
+        const { response } = await query(`SELECT * FROM retweeters`);
+
+        io.emit('retweeters', response.rows);
+
+    })();
 
 
     socket.on('add-target-tweet', (id) => {
@@ -200,6 +260,8 @@ io.sockets.on('connection', (socket) => {
         });
 
     });
+
+
 
 
     socket.on('remove-target-tweet', (id) => {
