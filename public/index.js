@@ -58,14 +58,14 @@ socket.on('observe-tweets', (tweets) => {
             `
 
 
-
 <div><h2>${id}</h2>
 
 
-<button id="spreadsheet" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+
+<button id="spreadsheet" role='button' class="btn btn-outline-success" type="submit">Spreadsheet</button>
 
 
-<input type="button" class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
+<input type="button" role='button' class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
 
     onclick="socket.emit('remove-target-tweet', ${id})"
 

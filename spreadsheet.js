@@ -114,7 +114,7 @@ __auth = null;
 function waitAuthorize() {
     return new Promise((resolve) => {
         const dispose = setInterval(() => {
-            if (!__auth) return;
+            if (!__auth) return console.log('Authorize...');
             clearInterval(dispose);
             resolve();
         }, 100);
@@ -226,7 +226,7 @@ module.exports = {
 
             const row = retweetersToRow(retweeter);
 
-            console.log(row);
+            // console.log(row);
 
             rows.push({ values: row });
 
