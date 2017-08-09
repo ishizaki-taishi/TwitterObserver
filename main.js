@@ -275,14 +275,14 @@ async function fetchUserStatus() {
         name = escapeSQL(name);
 
         const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', invalid = FALSE WHERE id = '${userID}'`);
-        console.log('ユーザー名を取得しました', userID, r);
+        console.log('ユーザー名を取得しました', userID);//, r);
     }
 
     // ユーザーが存在しない
     catch (e) {
 
         const r = await query(`UPDATE retweeters SET invalid = TRUE WHERE id = '${userID}'`);
-        console.log('ユーザー名の取得に失敗しました', userID, r);
+        console.log('ユーザー名の取得に失敗しました', userID);//, r);
 
     }
 
