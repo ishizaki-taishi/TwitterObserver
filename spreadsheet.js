@@ -54,21 +54,22 @@ function authorize(credentials, callback) {
 
     // Check if we have previously stored a token.
     fs.readFile(TOKEN_PATH, function(err, token) {
+        /*
         if (err) {
             getNewToken(oauth2Client, callback);
         } else {
-            // console.log(JSON.parse(token));
-            // oauth2Client.credentials = JSON.parse(token);
-            oauth2Client.credentials =
-            {
-                access_token: 'ya29.GluiBIZ43CdRzLw1E3Exp-KqIwCHsZq_Sj21UNZEbaF1RzZTwF-YX-_-wiEQvOwaCiFpcL03rMyPqlEtTma5NvirKI6P2URRJQijAXkES4iTQHCMWxyubgSNb3-e',
-                refresh_token: '1/I0vL3heQn9emLDgG7pbKLtT1OLjqaFp8DuQNnnLbMms',
-                token_type: 'Bearer',
-                expiry_date: 1502251791138
-            };
+        */
+        // console.log(JSON.parse(token));
+        // oauth2Client.credentials = JSON.parse(token);
+        oauth2Client.credentials = {
+            access_token: 'ya29.GluiBIZ43CdRzLw1E3Exp-KqIwCHsZq_Sj21UNZEbaF1RzZTwF-YX-_-wiEQvOwaCiFpcL03rMyPqlEtTma5NvirKI6P2URRJQijAXkES4iTQHCMWxyubgSNb3-e',
+            refresh_token: '1/I0vL3heQn9emLDgG7pbKLtT1OLjqaFp8DuQNnnLbMms',
+            token_type: 'Bearer',
+            expiry_date: 1502251791138
+        };
 
-            callback(oauth2Client);
-        }
+        callback(oauth2Client);
+        //}
     });
 }
 
