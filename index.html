@@ -1,207 +1,142 @@
-<script src="/socket.io/socket.io.js"></script>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-
-<style>
-    html,
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
-    .header {
-        color: #3879d9;
-        border-bottom: solid 4px #3879d9;
-    }
-
-    .user {
-        border-bottom: solid 1px #ccc;
-    }
-
-    .flex-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap-reverse;
-        justify-content: center;
-        align-content: space-around;
-        align-items: center;
+<!DOCTYPE html>
 
 
-        overflow-y: scroll;
-        background: #eee;
-        height: 100vh;
+<html>
 
-        /*box-shadow: 0 0 10px #000 inset;*/
-    }
-
-    .flex-item {
-        padding: 1rem;
-    }
-
-    .flex-item:nth-child(1) {
-
-        overflow-y: scroll;
-        max-width: 30vw;
-    }
-
-    .flex-item:nth-child(2) {
-
-        order: 0;
-
-        flex: 1 1 auto;
-
-        overflow-y: scroll;
-        max-width: 50%;
-        /*align-self: stretch;*/
-    }
-</style>
-
-<header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
-    <nav class="container">
+<head>
+    <meta charset="utf-8">
+    <title>TwitterObserver</title>
 
 
-        <span style="font-size:2rem">aa</span>
+    <script src="/socket.io/socket.io.js"></script>
 
-        <input type="text" placeholder="tweet id" id="id" />
-        <input type="button" value="Add" id="add" />
+    <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-        <button class="btn btn-outline-danger" type="submit" id="TEST" style="float:right;">TEST</button>
-
-    </nav>
-</header>
-
-
-<div class="flex-container" style="background=red">
-    <div id="left" class="flex-item" style="color=blue"></div>
-    <div id="log" class="flex-item" style="color=blue"></div>
-</div>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
 
 
-<script defer>
-    const socket = io(location.href.replace('http', 'ws'), {
-        transports: ['websocket']
-    });
-
-    window.socket = socket;
-
-
-    const left = document.querySelector('#left');
-
-    /*
-    const errorImpl = console.error;
-    console.error = function error(message) {
-      errorImpl.apply(this, arguments);
-      if (message.startsWith('WebSocket')) {
-        console.error('__ WebSocket Removed');
-      }
-    };
-    */
-
-    socket.on('log', function(msg) {
-
-        console.info(msg);
-
-    });
-
-    socket.on('error', (...args) => {
-
-        console.error(...args);
-    });
-
-    socket.on('observe-tweets', (tweets) => {
-
-
-        for (const {
-                id,
-                oembed
-            } of tweets) {
-
-            const div = document.createElement('div');
-            div.innerHTML =
-                `
-
-
-
-        <div><h1>${id}</h1>
-
-
-        <input type="button" class="remove-observe-tweet" value="Remove" data-id="${id}"
-
-            onclick="socket.emit('remove-target-tweet', ${id})"
-
-        />
-        </div>
-
-        ${oembed}
-
-
-        <hr>
-
-        `;
-
-            twttr.widgets.load(div);
-
-            left.appendChild(div);
-
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
         }
 
-        // console.info('OTIDS' + ids);
+        body {
+            background: rgb(247, 248, 251);
+        }
 
-    });
+        .header {
+            color: #3879d9;
+            border-bottom: solid 4px #3879d9;
+        }
+
+        .user {
+            border-bottom: solid 1px #ccc;
+        }
+
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap-reverse;
+            justify-content: center;
+            align-content: space-around;
+            align-items: center;
+
+
+            overflow-y: scroll;
+            background: #eee;
+            height: 100vh;
+
+            /*box-shadow: 0 0 10px #000 inset;*/
+        }
+
+        .flex-item {
+            padding: 1rem;
+        }
+
+        .flex-item:nth-child(1) {
+
+            overflow-y: scroll;
+            max-width: 30vw;
+        }
+
+        .flex-item:nth-child(2) {
+
+            order: 0;
+
+            flex: 1 1 auto;
+
+            overflow-y: scroll;
+            max-width: 50%;
+            /*align-self: stretch;*/
+        }
+    </style>
+
+    <script src="index.js" charset="utf-8" defer></script>
+
+
+</head>
+
+<body>
 
 
 
 
-    socket.on('retweeters', (retweeters) => {
-        console.info(retweeters);
-        const parent = document.querySelector('#log');
-        for (const retweeter of retweeters) {
+    <header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
+        <nav class="container">
 
-            console.log(retweeter);
+            <!--<span style="/*font-size:2rem*/">aa</span>-->
 
-            const div = document.createElement('div');
-            div.innerHTML = `
+            <h2>-</h2>
 
-            <div class="user">
-                ${JSON.stringify(retweeter)}
+
+            <form class="form-inline">
+                <input id="id" type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="Tweet ID">
+
+                <button id="add" class="btn btn-outline-primary" type="submit" id="TEST" style="float:right;">Add</button>
+
+
+                <button class="btn btn-outline-danger" type="submit" id="TEST">TEST</button>
+
+
+            </form>
+
+
+        </nav>
+    </header>
+
+    <div class="bd-pageheader" style="background: #f0f9ff; border-bottom: solid 1px #3879D8;">
+
+        <div class="container">
+            <div class="row">
+                <br><br><br><br>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+
+            <div id="left" class="col-12 col-md-4 bg-sidebar"></div>
+
+            <div id="right" class="col-12 col-md-8 bg-content">
+                <div id="log" style="max-height: 50vh; overflow: scroll;"></div>
             </div>
 
-            `;
-            parent.appendChild(div);
-
-
-        }
-
-    });
-
-    document.querySelector('#add').addEventListener('click', function() {
-        const id = document.querySelector('#id').value;
-
-        console.log('add: ', id);
-
-        socket.emit('add-target-tweet', id);
-
-
-        location.reload();
-    });
+        </div>
+    </div>
 
 
 
-    document.querySelector('#TEST').addEventListener('click', () => {
+    <script defer>
+    </script>
 
-        socket.emit('TEST');
+</body>
 
-    });
-
-
-
-    socket.on('error', function(msg) {
-        console.error(msg);
-    });
-</script>
+</html>

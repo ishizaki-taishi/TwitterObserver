@@ -1,35 +1,22 @@
 const port = process.env.PORT || 3000;
 
-const app = require('express')();
+const express = require('express');
+
+const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
 io.listen(http);
 
-var QueryString = {
-    parse: function(text, sep, eq, isDecode) {
-        text = text || location.search.substr(1);
 
-        text = decodeURIComponent(text);
 
-        sep = sep || '&';
-        eq = eq || '=';
-        var decode = (isDecode) ? decodeURIComponent : function(a) { return a; };
-        return text.split(sep).reduce(function(obj, v) {
-            var pair = v.split(eq);
-            obj[pair[0]] = pair[1]; //decode(pair[1]);
-            return obj;
-        }, {});
-    },
-    stringify: function(value, sep, eq, isEncode) {
-        sep = sep || '&';
-        eq = eq || '=';
-        var encode = (isEncode) ? encodeURIComponent : function(a) { return a; };
-        return Object.keys(value).map(function(key) {
-            return key + eq + encode(value[key]);
-        }).join(sep);
-    },
-};
+
+
+app.use(express.static('public'));
+
+
+const { QueryString } = require('./utils');
+
 
 
 const MAX_REQUEST_COUNT = 300;
@@ -142,7 +129,6 @@ async function getRT() {
     try {
 
         console.log('監視するツイート一覧: ', observeTweets);
-
 
         io.emit('log', 'DB Connection' + connectionString);
 
