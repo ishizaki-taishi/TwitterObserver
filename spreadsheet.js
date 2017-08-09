@@ -17,12 +17,14 @@ let auth = null;
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
-var SCOPES = ['https://www.googleapis.com/auth/spreadsheets']; //,      'https://www.googleapis.com/auth/drive'];
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']; //,      'https://www.googleapis.com/auth/drive'];
+const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-quickstart.json';
 
-// Load client secrets from a local file.
+console.log('TOKEN_DIR: ', TOKEN_DIR);
+
+const TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-quickstart.json';
+
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
         console.log('Error loading client secret file: ' + err);
@@ -41,6 +43,9 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback) {
+
+    console.log('Authorize: ', credentials);
+
     var clientSecret = credentials.installed.client_secret;
     var clientId = credentials.installed.client_id;
     var redirectUrl = credentials.installed.redirect_uris[0];
