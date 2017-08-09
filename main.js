@@ -9,6 +9,8 @@ const io = require('socket.io')(http);
 io.listen(http);
 
 
+//
+process.on('unhandledRejection', console.dir);
 
 
 
@@ -115,10 +117,13 @@ async function writeSpreadsheet() {
 
     console.log('スプレッドシートに書き込みます');
 
-    const w = await query('SELECT * FROM retweeters'); // WHERE invalid IS NULL LIMIT 1');
-    const ur = await update(row.spreadsheet_id, w);
+    const { spreadsheet_id } = (await query('SELECT * FROM observe_tweets')).response.rows[0];
 
-    console.log('スプレッドシートに書き込みました', ur);
+    const retweeters = (await query('SELECT * FROM retweeters')).response.rows;
+
+    const result = await update(spreadsheet_id, retweeters);
+
+    console.log('スプレッドシートに書き込みました', result);
 
 }
 

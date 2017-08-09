@@ -192,7 +192,6 @@ module.exports = {
 
         });
 
-        retweeters = retweeters.response.rows;
 
         const rows = [];
 
