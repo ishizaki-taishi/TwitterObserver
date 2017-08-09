@@ -6,6 +6,31 @@ const io = require('socket.io')(http);
 
 io.listen(http);
 
+var QueryString = {
+    parse: function(text, sep, eq, isDecode) {
+        text = text || location.search.substr(1);
+
+        text = decodeURIComponent(text);
+
+        sep = sep || '&';
+        eq = eq || '=';
+        var decode = (isDecode) ? decodeURIComponent : function(a) { return a; };
+        return text.split(sep).reduce(function(obj, v) {
+            var pair = v.split(eq);
+            obj[pair[0]] = pair[1]; //decode(pair[1]);
+            return obj;
+        }, {});
+    },
+    stringify: function(value, sep, eq, isEncode) {
+        sep = sep || '&';
+        eq = eq || '=';
+        var encode = (isEncode) ? encodeURIComponent : function(a) { return a; };
+        return Object.keys(value).map(function(key) {
+            return key + eq + encode(value[key]);
+        }).join(sep);
+    },
+};
+
 
 const MAX_REQUEST_COUNT = 300;
 
@@ -129,6 +154,7 @@ async function getRT() {
             // const response = await get('statuses/retweeters/ids', { id, stringify_ids: true });
             const response = await get('statuses/retweets/' + id, { id, count: 100, trim_user: false });
 
+
             io.emit('log', response);
 
 
@@ -140,8 +166,6 @@ async function getRT() {
                 const userID = user.id_str;
 
                 console.log('UserID: ', userID);
-
-
 
 
                 const r = await query(`DELETE FROM retweeters WHERE id = '${userID}'`);
@@ -283,6 +307,8 @@ io.sockets.on('connection', async(socket) => {
     (async() => {
 
         const { response } = await query(`SELECT * FROM retweeters WHERE invalid IS NULL OR invalid = FALSE`);
+        // const { response } = await query(`SELECT * FROM retweeters`);
+
 
         io.emit('retweeters', response.rows);
 
@@ -323,6 +349,75 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
+
+    socket.on('TEST', async() => {
+
+        var result = [];
+
+        const id = '894751560403632128';
+
+        const res = await get('search/tweets', {
+
+            q: 'Switch filter:retweets @dabisto_jp',
+            count: 100,
+            since_id: id
+
+        });
+
+        result.push(...res.statuses);
+
+        let next = res.search_metadata.next_results;
+
+        while (true) {
+            const params = QueryString.parse(next.substr(1));
+            const res2 = await get('search/tweets', params);
+            next = res2.search_metadata.next_results;
+
+            result.push(...res2.statuses);
+            if (!next) break;
+
+        }
+
+        io.emit('log', result);
+
+        io.emit('log', '検索情報からテーブルを更新します');
+
+        let _count = 0;
+
+        for (var w of result) {
+
+            //            w.created_at;
+
+            //            w.user.id_str
+
+            const userID = w.user.id_str;
+
+            console.log(userID);
+
+            const w2 = await query(`SELECT * FROM retweeters WHERE id = '${userID}'`);
+
+            io.emit('log', 'ID チェック: ' + (++_count));
+            // 既に存在している
+            if (w2.response.rowCount) continue;
+
+            io.emit('log', '登録されていないユーザーです！: ' + userID);
+
+            const createdAt = pgFormatDate(w.created_at);
+
+
+            await query(`
+
+                                INSERT INTO retweeters
+                                    (id, created_at)
+                                    VALUES
+                                    ('${userID}', to_timestamp('${createdAt}', 'YYYY MM DD HH24 MI SS'))
+
+                            `);
+
+        }
+
+
+    });
 
 
 

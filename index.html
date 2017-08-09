@@ -2,6 +2,10 @@
 
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
 <style>
     html,
@@ -11,15 +15,8 @@
     }
 
     .header {
-        position: fixed;
-        background: #fff; /*rgba(0, 0, 0, .5);*/
-        top: 0;
-        left: 0;
-        box-shadow: 0 0 4px #000;
-        width: 100vw;
-        padding: .5rem;
-        color: #7cf;
-        border-bottom: solid 4px #7cf;
+        color: #3879d9;
+        border-bottom: solid 4px #3879d9;
     }
 
     .user {
@@ -64,20 +61,26 @@
     }
 </style>
 
+<header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
+    <nav class="container">
+
+
+        <span style="font-size:2rem">aa</span>
+
+        <input type="text" placeholder="tweet id" id="id" />
+        <input type="button" value="Add" id="add" />
+
+        <button class="btn btn-outline-danger" type="submit" id="TEST" style="float:right;">TEST</button>
+
+    </nav>
+</header>
+
 
 <div class="flex-container" style="background=red">
     <div id="left" class="flex-item" style="color=blue"></div>
     <div id="log" class="flex-item" style="color=blue"></div>
 </div>
 
-
-<div class="header">
-    <span style="font-size:2rem">aa</span>
-
-    <input type="text" placeholder="tweet id" id="id" />
-    <input type="button" value="Add" id="add" />
-
-</div>
 
 
 <script defer>
@@ -160,6 +163,8 @@
         const parent = document.querySelector('#log');
         for (const retweeter of retweeters) {
 
+            console.log(retweeter);
+
             const div = document.createElement('div');
             div.innerHTML = `
 
@@ -184,6 +189,14 @@
 
 
         location.reload();
+    });
+
+
+
+    document.querySelector('#TEST').addEventListener('click', () => {
+
+        socket.emit('TEST');
+
     });
 
 
