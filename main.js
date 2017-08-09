@@ -107,17 +107,54 @@ DROP TABLE fruits3_tmp;
 let observeTweets = [];
 
 
+
+const { create, update } = require('./spreadsheet');
+
+// リツイート情報をスプレッドシートに反映する
+async function writeSpreadsheet() {
+
+    console.log('スプレッドシートに書き込みます');
+
+    const w = await query('SELECT * FROM retweeters'); // WHERE invalid IS NULL LIMIT 1');
+    const ur = await update(row.spreadsheet_id, w);
+
+    console.log('スプレッドシートに書き込みました', ur);
+
+}
+
+
 async function updateObserveTweets() {
 
     const { response } = await query('SELECT * FROM observe_tweets');
+
+
+    for (const row of response.rows) {
+
+        console.log('監視対象ツイートを更新します');
+
+        const { response } = await query(`SELECT spreadsheet_id FROM observe_tweets WHERE id = '${row.id}'`);
+
+        // スプレッドシートが生成されていない
+        if (!response.rows[0].spreadsheet_id) {
+
+            console.log('スプレッドシートが生成されていません: ', row.id);
+
+            // スプレッドシートを作成して DB に登録する
+            const { spreadsheetId } = await create();
+
+            await query(`UPDATE observe_tweets SET spreadsheet_id = '${spreadsheetId}' WHERE id = '${row.id}'`);
+
+            console.log('スプレッドシート ID を登録しました: ', spreadsheetId);
+
+        }
+
+    }
+
 
     observeTweets = response.rows.map((row) => row.id);
 
 }
 
-
-
-updateObserveTweets();
 
 
 
@@ -286,7 +323,18 @@ io.sockets.on('connection', async(socket) => {
     io.emit('observe-tweets', test);
 
 
+    // スプレッドシート情報を投げる
+    (async() => {
 
+        const { response } = await query(`SELECT * FROM observe_tweets WHERE spreadsheet_id IS NOT NULL`);
+
+        for (const observe of response.rows) {
+
+            io.emit('spreadsheet', observe);
+
+        }
+
+    })();
 
 
 

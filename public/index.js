@@ -28,6 +28,23 @@ socket.on('error', (...args) => {
     console.error(...args);
 });
 
+socket.on('spreadsheet', (ss) => {
+
+    const div = document.createElement('div');
+
+
+    div.innerHTML = `
+
+    <!--<iframe width="100%" height="600" src="https://docs.google.com/spreadsheets/d/${ss.spreadsheet_id}" frameborder="0"></iframe>-->
+
+
+    `;
+
+    document.body.appendChild(div);
+
+
+});
+
 socket.on('observe-tweets', (tweets) => {
 
 
@@ -45,11 +62,16 @@ socket.on('observe-tweets', (tweets) => {
 <div><h2>${id}</h2>
 
 
-<input type="button" class="btn btn-outline-danger remove-observe-tweet" value="Remove" data-id="${id}"
+<button id="add" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+
+
+<input type="button" class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
 
     onclick="socket.emit('remove-target-tweet', ${id})"
 
 />
+
+
 </div>
 
 ${oembed}
