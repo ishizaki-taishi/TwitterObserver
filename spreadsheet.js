@@ -170,11 +170,11 @@ module.exports = {
 
     },
 
-    async update(id, retweeters) {
+    async update(id, retweeters, io) {
 
         await waitAuthorize();
 
-
+        io.emit('spreadsheet-begin');
 
         const sheets = google.sheets('v4');
 
@@ -186,7 +186,7 @@ module.exports = {
                 requests: [{
                     updateSpreadsheetProperties: {
                         properties: {
-                            title: Math.random().toString()
+                            title: Date()
                         },
                         fields: 'title'
                     }
@@ -214,7 +214,7 @@ module.exports = {
         const rows = [];
 
 
-        const header = (['a', 'b', 'c', 'd', '🍎']).map((v) => {
+        const header = (['ツイート ID', '名前', '@ID', 'RT 時刻', '🐴']).map((v) => {
             return {
                 userEnteredValue: { stringValue: v }
             };
@@ -287,6 +287,8 @@ module.exports = {
 
 
         console.log('スプレッドシートデータを更新しました', result2);
+
+        io.emit('spreadsheet-end');
 
         return result2;
 

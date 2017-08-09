@@ -121,7 +121,7 @@ async function writeSpreadsheet() {
 
     const retweeters = (await query('SELECT * FROM retweeters')).response.rows;
 
-    const result = await update(spreadsheet_id, retweeters);
+    const result = await update(spreadsheet_id, retweeters, io);
 
     console.log('スプレッドシートに書き込みました', result);
 

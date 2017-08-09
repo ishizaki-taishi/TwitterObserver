@@ -2,7 +2,7 @@ const socket = io(location.href.replace('http', 'ws'), {
     transports: ['websocket']
 });
 
-//window.socket = socket;
+window.socket = socket;
 
 
 const left = document.querySelector('#left');
@@ -28,7 +28,13 @@ socket.on('error', (...args) => {
     console.error(...args);
 });
 
+let _spreadsheet_id = null;
+
 socket.on('spreadsheet', (ss) => {
+
+
+    _spreadsheet_id = ss.spreadsheet_id;
+
 
     const div = document.createElement('div');
 
@@ -62,7 +68,8 @@ socket.on('observe-tweets', (tweets) => {
 
 
 
-<button id="spreadsheet" role='button' class="btn btn-outline-success" type="submit">Spreadsheet</button>
+
+<button id="open-spreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="btn btn-outline-success" type="submit">Spreadsheet</button>
 
 
 <input type="button" role='button' class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
@@ -86,7 +93,8 @@ ${oembed}
         left.appendChild(div);
 
 
-        document.querySelector('#spreadsheet').addEventListener('click', () => {
+
+        document.querySelector('#open-spreadsheet').addEventListener('click', () => {
             socket.emit('spreadsheet');
         });
     }
@@ -95,6 +103,25 @@ ${oembed}
 
 });
 
+
+
+$('#open-spreadsheet').on('shown.bs.modal', () => {
+    $('#myInput').focus()
+});
+
+
+document.querySelector('#spreadsheet-link').addEventListener('click', () => {
+
+
+    window.open(`https://docs.google.com/spreadsheets/d/${_spreadsheet_id}`);
+
+});
+
+
+socket.on('spreadsheet-end', () => {
+    document.querySelector('#spreadsheet-progress').textContent = '上書きに成功しました！';
+    document.querySelector('#spreadsheet-link').disabled = '';
+});
 
 
 
