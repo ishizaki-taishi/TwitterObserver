@@ -192,6 +192,8 @@ module.exports = {
 
         });
 
+        console.log('スプレッドシートのタイトルを変更しました', result);
+
 
         const rows = [];
 
@@ -268,6 +270,7 @@ module.exports = {
         });
 
 
+        console.log('スプレッドシートデータを更新しました', result2);
 
         return result2;
 
