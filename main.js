@@ -362,6 +362,10 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
+    socket.on('spreadsheet', () => {
+        writeSpreadsheet();
+    });
+
 
 
     socket.on('remove-target-tweet', (id) => {

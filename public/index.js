@@ -62,7 +62,7 @@ socket.on('observe-tweets', (tweets) => {
 <div><h2>${id}</h2>
 
 
-<button id="add" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+<button id="spreadsheet" class="btn btn-outline-success" type="submit">Spreadsheet</button>
 
 
 <input type="button" class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
@@ -85,6 +85,10 @@ ${oembed}
 
         left.appendChild(div);
 
+
+        document.querySelector('#spreadsheet').addEventListener('click', () => {
+            socket.emit('spreadsheet');
+        });
     }
 
     // console.info('OTIDS' + ids);
