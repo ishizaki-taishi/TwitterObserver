@@ -21,7 +21,7 @@ body {
 
 .header {
     color: #3879d9;
-    border-bottom: solid 4px #3879d9;
+    box-shadow: 0 0 0.8rem #3879d9;
 }
 
 .user {

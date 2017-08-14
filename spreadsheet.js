@@ -220,7 +220,7 @@ module.exports = {
         let rows = [];
 
 
-        const header = (['ツイート ID', '名前', '@ID', 'RT 時刻', '🐴']).map((v) => {
+        const header = (['ツイート ID', '名前', '@ID', 'RT 時刻', 'フォロー', 'フォロワー', 'FF 比', '🐴']).map((v) => {
             return {
                 userEnteredValue: { stringValue: v }
             };
@@ -237,6 +237,11 @@ module.exports = {
                 { userEnteredValue: { stringValue: toString(r.name) } },
                 { userEnteredValue: { stringValue: toString(r.screen_name) } },
                 { userEnteredValue: { stringValue: toString(r.created_at) } },
+
+                { userEnteredValue: { numberValue: (r.friends_count) || -2 } },
+                { userEnteredValue: { numberValue: (r.followers_count) || -2 } },
+                { userEnteredValue: { numberValue: r.followers_count <= 0 ? 0.0 : ((r.followers_count / r.friends_count) || 0.0) } },
+
                 { userEnteredValue: { stringValue: toString(r.invalid) } }
 
             ];
@@ -268,7 +273,7 @@ module.exports = {
                         properties: {
                             gridProperties: {
                                 rowCount,
-                                columnCount: 5
+                                columnCount: 8
                             }
                         },
                         fields: 'gridProperties'

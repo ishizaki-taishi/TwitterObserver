@@ -5,7 +5,21 @@ const socket = io(location.href.replace('http', 'ws'), {
 window.socket = socket;
 
 
+function shuffle(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var r = Math.floor(Math.random() * (i + 1));
+        var tmp = array[i];
+        array[i] = array[r];
+        array[r] = tmp;
+    }
+    return array;
+}
 
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 
 function formatTime16(text) {
     const format = '0123-45-67T89:ab:cd';
@@ -37,9 +51,16 @@ const app = new Vue({
 
         observeTweets: [],
 
+        lottery: {
+            name: '',
+            screen_name: ''
+        },
+
         ff: {
             checkedCount: 0
         },
+
+        lotteryOembed: '',
 
         databaseCapacity: {
             max: 0,
@@ -57,6 +78,49 @@ const app = new Vue({
         openSpreadsheet() {
             console.log('スプレッドシートを開きます');
             socket.emit('spreadsheet');
+        },
+
+
+        openLotteryDialog() {
+
+            app.$data.lotteryOembed = 'loading...';
+
+            const length = app.$data.retweeters.length;
+
+            const retweeter = shuffle([...app.$data.retweeters])[getRandomInt(0, length)];
+
+            /*
+            app.$data.lottery.name = retweeter.name;
+            app.$data.lottery.screen_name = retweeter.screen_name;
+
+            app.$data.lottery.friends_count = retweeter.friends_count;
+            app.$data.lottery.followers_count = retweeter.followers_count;
+
+            */
+            app.$data.lottery = retweeter;
+            app.$data.lottery.ff = (retweeter.followers_count / retweeter.friends_count).toFixed(2);
+
+
+            console.log('抽選結果: ', retweeter);
+
+            const userEl = document.querySelector('#lottery-user');
+            userEl.innerHTML = '';
+
+            twttr.widgets.createTimeline(
+                '600720083413962752',
+                userEl, {
+                    screenName: retweeter.screen_name
+                }
+            );
+
+            // document.querySelector('#ottery-oembed').innerHTML = '';
+
+            socket.emit('lottery-oembed', retweeter.screen_name);
+
+
+            // $('#lottery-dialog').focus();
+            $('#lottery-dialog').modal();
+
         },
 
         test() {
@@ -77,6 +141,21 @@ const app = new Vue({
     }
 
 
+});
+
+
+
+socket.on('lottery-oembed', (oembed) => {
+    console.log('抽選結果の oembed を受け取りました: ', oembed);
+    app.$data.lotteryOembed = oembed;
+
+    setTimeout(() => {
+
+        [...document.querySelectorAll('.twitter-tweet')].forEach((el) => {
+            twttr.widgets.load(el);
+        });
+
+    }, 500);
 });
 
 
@@ -123,27 +202,6 @@ socket.on('observe-tweets', (tweets) => {
 
     app.$data.observeTweets = tweets;
 
-    /*
-            twttr.widgets.load(div);
-
-            left.appendChild(div);
-
-
-
-            console.log(document.querySelector('#open-spreadsheet'));
-
-
-
-    document.querySelector('#open-spreadsheet').addEventListener('click', () => {
-        console.log('emit: spreadsheet');
-        socket.emit('spreadsheet');
-    });
-
-
-
-// console.info('OTIDS' + ids);
-
-    */
 });
 
 
@@ -177,7 +235,6 @@ document.querySelector('#add').addEventListener('click', function() {
     console.log('add: ', id);
 
     socket.emit('add-target-tweet', id);
-
 
     location.reload();
 });

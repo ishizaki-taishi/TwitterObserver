@@ -319,6 +319,7 @@ async function fetchUserStatus() {
 }
 
 
+
 fetchUserStatus();
 setInterval(fetchUserStatus, 3000);
 
@@ -351,32 +352,38 @@ io.sockets.on('connection', async(socket) => {
 
     //    return;
 
-    let test = [];
+    (async() => {
+
+        let test = [];
 
 
-    for (const id of observeTweets) {
+        for (const id of observeTweets) {
 
-        const { html } = await get('statuses/oembed', {
-            url: `https://twitter.com/_/status/${id}`
-        });
+            const { html } = await get('statuses/oembed', {
+                url: `https://twitter.com/_/status/${id}`
+            });
 
 
 
-        console.log('oembed');
+            console.log('oembed');
 
-        test.push({
-            id,
-            oembed: html
-        });
-    }
-    io.emit('observe-tweets', test);
+            test.push({
+                id,
+                oembed: html
+            });
+        }
+        io.emit('observe-tweets', test);
+
+
+    })();
+
 
     // FF 取得情報を投げる
     (async() => {
         const { response } = await query(`SELECT * FROM retweeters WHERE friends_count IS NOT NULL`);
         io.emit('ff-checked', response.rowCount);
     })();
-    
+
 
 
     // スプレッドシート情報を投げる
@@ -415,6 +422,32 @@ io.sockets.on('connection', async(socket) => {
 
         });
 
+    });
+
+
+
+    socket.on('lottery-oembed', async(screenName) => {
+
+        const res = await get('search/tweets', {
+            q: 'from:tantoraDREAM filter:retweets @dabisto_jp ダビストティザー公開記念キャンペーン', //`from:${screenName}`,
+            count: 1
+        });
+
+
+        console.log('抽選結果の oembed を取得します: ', res.statuses[0].retweeted_status);
+        /*
+        */
+        // console.log('oembed を取得しました: ', html);
+
+        // const id = res.statuses[0].id_str;
+        const id = res.statuses[0].retweeted_status.id_str;
+
+
+        const { html } = await get('statuses/oembed', {
+            url: `https://twitter.com/_/status/${id}`
+        });
+
+        io.emit('lottery-oembed', html);
     });
 
 
