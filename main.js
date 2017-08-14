@@ -20,6 +20,8 @@ app.use(express.static('public'));
 const { QueryString } = require('./utils');
 
 
+const DATABASE_CAPACITY = 10000;
+
 
 const MAX_REQUEST_COUNT = 300;
 
@@ -27,6 +29,8 @@ const MAX_REQUEST_COUNT = 300;
 function escapeSQL(text) {
     return text.replace(/'/g, `''`);
 }
+
+io.emit('restart');
 
 
 
@@ -83,6 +87,26 @@ function query(query) {
                 error: e,
                 response: res
             });
+        });
+    });
+}
+
+
+
+function dbQuery(query) {
+    return new Promise((resolve) => {
+        dbClient.query(query, (error, response) => {
+            if (error) throw error;
+
+            Object.defineProperty(response, 'value', {
+                get() {
+                    // 結果が 1 件だけなら value で取得可能
+                    if (response.rowCount !== 1) throw response;
+                    return response.rows[0];
+                }
+            });
+
+            resolve(response);
         });
     });
 }
@@ -275,14 +299,14 @@ async function fetchUserStatus() {
         name = escapeSQL(name);
 
         const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', invalid = FALSE WHERE id = '${userID}'`);
-        console.log('ユーザー名を取得しました', userID);//, r);
+        console.log('ユーザー名を取得しました', userID); //, r);
     }
 
     // ユーザーが存在しない
     catch (e) {
 
         const r = await query(`UPDATE retweeters SET invalid = TRUE WHERE id = '${userID}'`);
-        console.log('ユーザー名の取得に失敗しました', userID);//, r);
+        console.log('ユーザー名の取得に失敗しました', userID); //, r);
 
     }
 
@@ -303,6 +327,23 @@ io.sockets.on('connection', async(socket) => {
 
 
     io.emit('log', `API Interval: ${interval}`);
+
+
+    // DB のキャパシティを確認
+    (async() => {
+
+        // リツイート情報の総数
+        const { value } = await dbQuery('SELECT COUNT(*) FROM retweeters');
+
+        io.emit('database-capacity', {
+            max: DATABASE_CAPACITY,
+            count: parseInt(value.count)
+        });
+
+        console.log('DB COUNT: ', value);
+
+    })();
+
 
 
     //    return;
@@ -393,6 +434,8 @@ io.sockets.on('connection', async(socket) => {
 
 
 
+
+
     socket.on('TEST', async() => {
 
         var result = [];
@@ -406,6 +449,8 @@ io.sockets.on('connection', async(socket) => {
             since_id: id
 
         });
+
+
 
         result.push(...res.statuses);
 
@@ -429,9 +474,7 @@ io.sockets.on('connection', async(socket) => {
 
         for (var w of result) {
 
-            //            w.created_at;
 
-            //            w.user.id_str
 
             const userID = w.user.id_str;
 

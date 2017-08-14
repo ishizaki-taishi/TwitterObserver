@@ -1,172 +1,165 @@
 <!DOCTYPE html>
-
-
 <html>
 
 <head>
     <meta charset="utf-8">
     <title>TwitterObserver</title>
 
-
     <script src="/socket.io/socket.io.js"></script>
 
     <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
+    <link rel="stylesheet" href="style.css">
 
+    <script src="vue.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.common.js" charset="utf-8"></script>
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-        }
+    <script type="text/x-template" id="icon-template">
+        <i :class="'fa fa-' + fa" aria-hidden="true"></i>
+    </script>
 
-        body {
+    <script type="text/x-template" id="container-template">
+        <div class="container">
+            <div class="row">
+                <slot></slot>
+            </div>
+        </div>
+    </script>
 
-            /* background: rgb(247, 248, 251); */
-        }
-
-        #log {
-            background-color: #f7f8fb;
-            border: 1px solid #EEF1F6;
-            border-radius: 4px;
-            padding: 1rem;
-            font-size: .8rem;
-        }
-
-        .header {
-            color: #3879d9;
-            border-bottom: solid 4px #3879d9;
-        }
-
-        .user {
-            border-bottom: solid 1px #ccc;
-        }
-
-        .flex-container {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap-reverse;
-            justify-content: center;
-            align-content: space-around;
-            align-items: center;
-
-
-            overflow-y: scroll;
-            background: #eee;
-            height: 100vh;
-
-            /*box-shadow: 0 0 10px #000 inset;*/
-        }
-
-        .flex-item {
-            padding: 1rem;
-        }
-
-        .flex-item:nth-child(1) {
-
-            overflow-y: scroll;
-            max-width: 30vw;
-        }
-
-        .flex-item:nth-child(2) {
-
-            order: 0;
-
-            flex: 1 1 auto;
-
-            overflow-y: scroll;
-            max-width: 50%;
-            /*align-self: stretch;*/
-        }
-    </style>
-
-    <script src="index.js" charset="utf-8" defer></script>
 
 
 </head>
 
 <body>
 
+    <div id="app">
 
 
 
-    <header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
-        <nav class="container">
 
-            <!--<span style="/*font-size:2rem*/">aa</span>-->
+        <header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
+            <nav class="container">
 
-            <h2>-  </h2>
+                <!--<span style="/*font-size:2rem*/">aa</span>-->
 
-
-            <form class="form-inline">
-                <input id="id" type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="Tweet ID">
-
-                <button id="add" class="btn btn-outline-primary" type="submit" id="TEST" style="float:right;">Add</button>
+                <h2>-</h2>
 
 
-                <button class="btn btn-outline-danger" type="submit" id="TEST">TEST</button>
+                <form class="form-inline">
+                    <input id="id" type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="Tweet ID">
+
+                    <button disabled id="add" class="btn btn-outline-primary" type="submit" id="TEST" style="float:right;">Add</button>
 
 
-            </form>
+                    <button disabled class="btn btn-outline-danger" type="submit" id="TEST">TEST</button>
 
 
-        </nav>
-    </header>
+                </form>
 
-    <div class="bd-pageheader" style="background: #f0f9ff; border-bottom: solid 1px #3879D8;">
+
+            </nav>
+        </header>
+
+        <div class="bd-pageheader" style="background: #f0f9ff; border-bottom: solid 1px #3879D8;">
+            <app-container>
+
+                <h2>
+
+                    <app-icon fa="database"></app-icon> Rows: {{ databaseCapacity.count }} of {{ databaseCapacity.max }}
+
+                </h2>
+            </app-container>
+        </div>
+
+
 
         <div class="container">
-            <div class="row">
-                <br><br><br><br>
+            <div class="row" style="padding-top: 2rem;">
+
+
+                <div id="left" class="col-12 col-md-4 bg-sidebar">
+
+                    <div v-for="tweet in observeTweets">
+
+                        <h2>{{ tweet.id }}</h2>
+
+                        <!-- v-bind:id="'list-' + id"-->
+
+                        <button id="open-spreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+
+
+                        <input disabled type="button" role='button' class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}" onclick="socket.emit('remove-target-tweet', ${id})" />
+
+                        <div :id="'oembed-' + tweet.id" v-html="tweet.oembed"></div>
+
+
+                        <div v-html="'<script>console.log(12);twttr.widgets.load(document.querySelector(`#oembed-' + tweet.id + '`));</script>'"></div>
+
+
+
+                    </div>
+
+                </div>
+
+
+                <div id="right" class="col-12 col-md-8 bg-content">
+
+
+                    <h2>retweets: {{retweeters.length || 'loading...'}}</h2>
+
+                    <div id="log" style="max-height: 50vh; overflow: scroll;">
+
+                        <div v-for="retweeter in retweeters">
+                            {{ retweeter.name }} @{{retweeter.screen_name}}
+                        </div>
+                    </div>
+
+
+
+                </div>
 
             </div>
-        </div>
-    </div>
 
-    <div class="container">
-        <div class="row" style="padding-top: 2rem;">
 
-            <div id="left" class="col-12 col-md-4 bg-sidebar"></div>
-
-            <div id="right" class="col-12 col-md-8 bg-content">
-                <div id="log" style="max-height: 50vh; overflow: scroll;"></div>
-            </div>
 
         </div>
 
 
 
-    </div>
-
-
-
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Spreadsheet</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Spreadsheet</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
-                </div>
-                <div id="spreadsheet-progress" class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">中止</button>
-                    <button id="spreadsheet-link" disabled type="button" class="btn btn-success">スプレッドシートを開く</button>
+                    </div>
+                    <div id="spreadsheet-progress" class="modal-body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">中止</button>
+                        <button id="spreadsheet-link" disabled type="button" class="btn btn-success">スプレッドシートを開く</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
+
+
+    </div>
+    <script>
+    </script>
+    <script src="index.js" charset="utf-8" defer></script>
 
 
 </body>
