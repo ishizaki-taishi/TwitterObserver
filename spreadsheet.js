@@ -4,6 +4,14 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
 
+let io = null;
+
+console.emit = function emit(...args) {
+    console.log(...args);
+    io.emit('log', args.join(' '));
+};
+
+
 
 class Spreadsheet {
     constructor() {
@@ -170,7 +178,10 @@ module.exports = {
 
     },
 
-    async update(id, retweeters, io) {
+    async update(id, retweeters, _io) {
+
+        // socket.io を保持
+        io = _io;
 
         await waitAuthorize();
 
@@ -197,21 +208,16 @@ module.exports = {
 
 
         const result = await new Promise((resolve) => {
-
             sheets.spreadsheets.batchUpdate(request, (err, response) => {
-
                 if (err) return resolve(err);
-
                 resolve(response);
-
             });
-
         });
 
         console.log('スプレッドシートのタイトルを変更しました', result);
 
 
-        const rows = [];
+        let rows = [];
 
 
         const header = (['ツイート ID', '名前', '@ID', 'RT 時刻', '🐴']).map((v) => {
@@ -248,49 +254,100 @@ module.exports = {
 
         }
 
-        const test = {
-            requests: [{
-                updateCells: {
-                    start: {
-                        sheetId: 0,
-                        rowIndex: 0,
-                        columnIndex: 0
-                    },
-                    rows: rows,
-                    fields: 'userEnteredValue'
-                }
-            }]
+
+        const rowCount = rows.length;
+
+
+        // Row を拡張する
+        const _request = {
+            spreadsheetId: id,
+            auth: __auth,
+            resource: {
+                requests: [{
+                    updateSheetProperties: {
+                        properties: {
+                            gridProperties: {
+                                rowCount,
+                                columnCount: 5
+                            }
+                        },
+                        fields: 'gridProperties'
+                    }
+                }]
+            }
         };
-
-
-
-
-
-
-        const result2 = await new Promise((resolve) => {
-
-            sheets.spreadsheets.batchUpdate({
-
-                spreadsheetId: id,
-                auth: __auth,
-                resource: test
-
-            }, (err, response) => {
-
+        const _result = await new Promise((resolve) => {
+            sheets.spreadsheets.batchUpdate(_request, (err, response) => {
                 if (err) return resolve(err);
-
                 resolve(response);
+            });
+        });
+
+        console.log('Row を拡張しました', _result);
+
+
+
+
+        const n = 999;
+
+        let index = 0;
+
+        // 1000 以上の row は更新できないので分割する
+        while (rows.length) {
+
+            const v = rows.slice(0, n);
+
+            const test = {
+                requests: [{
+                    updateCells: {
+                        start: {
+                            sheetId: 0,
+                            rowIndex: index,
+                            columnIndex: 0
+                        },
+                        rows: v,
+                        fields: 'userEnteredValue'
+                    }
+                }]
+            };
+
+
+
+            const result2 = await new Promise((resolve) => {
+
+                sheets.spreadsheets.batchUpdate({
+
+                    spreadsheetId: id,
+                    auth: __auth,
+                    resource: test
+
+                }, (err, response) => {
+
+                    if (err) return resolve(err);
+
+                    resolve(response);
+
+                });
 
             });
 
-        });
+            console.emit(result2);
 
 
-        console.log('スプレッドシートデータを更新しました', result2);
+            console.emit('spreadsheet progress:', index + '/' + rowCount);
+
+            rows = rows.slice(n);
+            index += n;
+        }
+
+
+
+
+        console.log('スプレッドシートデータを更新しました');
 
         io.emit('spreadsheet-end');
 
-        return result2;
+
 
 
     }

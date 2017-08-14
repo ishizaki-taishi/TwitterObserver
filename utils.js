@@ -1,4 +1,3 @@
-
 const QueryString = {
     parse: function(text, sep, eq, isDecode = true) {
         text = text || location.search.substr(1);
@@ -24,8 +23,9 @@ const QueryString = {
 
 
 
+
 module.exports = {
 
-QueryString
+    QueryString
 
 };

@@ -7,6 +7,16 @@ window.socket = socket;
 
 
 
+function formatTime16(text) {
+    const format = '0123-45-67T89:ab:cd';
+    return format.split('').map((value) => {
+        if (!value.match(/[0-9a-d]/)) return value;
+        return text[parseInt(value, 16)];
+    }).join('');
+}
+
+
+
 
 Vue.component('app-icon', {
     props: ['fa'],
@@ -23,21 +33,50 @@ const app = new Vue({
     el: '#app',
     data: {
 
+        message: '',
+
         observeTweets: [],
+
+        ff: {
+            checkedCount: 0
+        },
 
         databaseCapacity: {
             max: 0,
             count: 0
         },
 
+        inputTime: '',
+        time: null,
+
         retweeters: []
 
     },
     methods: {
+
+        openSpreadsheet() {
+            console.log('スプレッドシートを開きます');
+            socket.emit('spreadsheet');
+        },
+
         test() {
 
         }
+    },
+    watch: {
+        // この関数は question が変わるごとに実行されます。
+        inputTime(value) {
+
+            const time = ('00000000000000' + value.substr(0, 14)).substr(-14);
+
+            const date = new Date(formatTime16(time));
+
+            this.time = date.toLocaleString();
+
+        }
     }
+
+
 });
 
 
@@ -56,7 +95,6 @@ socket.on('restart', () => {
 });
 
 
-const left = document.querySelector('#left');
 
 
 socket.on('log', function(msg) {
@@ -73,6 +111,10 @@ socket.on('error', (...args) => {
 let _spreadsheet_id = null;
 
 
+socket.on('ff-checked', (count) => {
+    app.$data.ff.checkedCount = count;
+});
+
 socket.on('spreadsheet', (ss) => {
     _spreadsheet_id = ss.spreadsheet_id;
 });
@@ -81,52 +123,27 @@ socket.on('observe-tweets', (tweets) => {
 
     app.$data.observeTweets = tweets;
 
-    return;
+    /*
+            twttr.widgets.load(div);
 
-    for (const {
-            id,
-            oembed
-        } of tweets) {
-
-        const div = document.createElement('div');
-        div.innerHTML =
-            `
-
-
-<div><h2>${id}</h2>
+            left.appendChild(div);
 
 
 
-
-<button id="open-spreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="btn btn-outline-success" type="submit">Spreadsheet</button>
-
-
-<input disabled type="button" role='button' class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}"
-
-    onclick="socket.emit('remove-target-tweet', ${id})"
-
-/>
-
-
-</div>
-
-${oembed}
-
-`;
-
-        twttr.widgets.load(div);
-
-        left.appendChild(div);
+            console.log(document.querySelector('#open-spreadsheet'));
 
 
 
-        document.querySelector('#open-spreadsheet').addEventListener('click', () => {
-            socket.emit('spreadsheet');
-        });
-    }
+    document.querySelector('#open-spreadsheet').addEventListener('click', () => {
+        console.log('emit: spreadsheet');
+        socket.emit('spreadsheet');
+    });
 
-    // console.info('OTIDS' + ids);
 
+
+// console.info('OTIDS' + ids);
+
+    */
 });
 
 

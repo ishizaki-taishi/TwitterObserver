@@ -64,6 +64,7 @@ const client = new Twitter({
     access_token_secret: 'KlpgzZcHsx9ciOu9fDxCuBrUqmE3LtlVJ0ML6E8rnkxj9'
 });
 
+console.log('init');
 
 
 const { Pool, Client } = require('pg')
@@ -285,7 +286,7 @@ setInterval(getRT, RequestInterval.StatusesRetweetersIds);
 
 async function fetchUserStatus() {
 
-    const w = await query('SELECT * FROM retweeters WHERE invalid IS NULL LIMIT 1');
+    const w = await query('SELECT * FROM retweeters WHERE invalid IS NULL OR friends_count IS NULL LIMIT 1');
 
     if (w.error) return;
 
@@ -294,18 +295,20 @@ async function fetchUserStatus() {
 
     try {
 
-        let { name, screen_name } = await get('users/show', { user_id: userID });
+        let { name, screen_name, friends_count, followers_count } = await get('users/show', { user_id: userID });
 
         name = escapeSQL(name);
 
-        const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', invalid = FALSE WHERE id = '${userID}'`);
-        console.log('ユーザー名を取得しました', userID); //, r);
+        //console.log('フォロー, フォロワー', friends_count, followers_count, screen_name);
+
+        const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', friends_count = ${friends_count}, followers_count = ${followers_count}, invalid = FALSE WHERE id = '${userID}'`);
+        console.log('ユーザー名を取得しました', userID, '@' + screen_name); //, r);
     }
 
     // ユーザーが存在しない
     catch (e) {
 
-        const r = await query(`UPDATE retweeters SET invalid = TRUE WHERE id = '${userID}'`);
+        const r = await query(`UPDATE retweeters SET invalid = TRUE, friends_count = -1, followers_count = -1 WHERE id = '${userID}'`);
         console.log('ユーザー名の取得に失敗しました', userID); //, r);
 
     }
@@ -317,7 +320,7 @@ async function fetchUserStatus() {
 
 
 fetchUserStatus();
-setInterval(fetchUserStatus, 5000);
+setInterval(fetchUserStatus, 3000);
 
 
 io.sockets.on('connection', async(socket) => {
@@ -367,6 +370,13 @@ io.sockets.on('connection', async(socket) => {
         });
     }
     io.emit('observe-tweets', test);
+
+    // FF 取得情報を投げる
+    (async() => {
+        const { response } = await query(`SELECT * FROM retweeters WHERE friends_count IS NOT NULL`);
+        io.emit('ff-checked', response.rowCount);
+    })();
+    
 
 
     // スプレッドシート情報を投げる

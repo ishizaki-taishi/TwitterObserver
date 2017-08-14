@@ -18,8 +18,13 @@
 
     <link rel="stylesheet" href="style.css">
 
+
+    <!--
     <script src="vue.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.common.js" charset="utf-8"></script>
+    -->
+
+    <script src="vue.js" charset="utf-8"></script>
 
     <script type="text/x-template" id="icon-template">
         <i :class="'fa fa-' + fa" aria-hidden="true"></i>
@@ -57,22 +62,22 @@
 
                     <button disabled id="add" class="btn btn-outline-primary" type="submit" id="TEST" style="float:right;">Add</button>
 
-
                     <button disabled class="btn btn-outline-danger" type="submit" id="TEST">TEST</button>
-
 
                 </form>
 
+                <app-icon fa="github"></app-icon><a href="https://github.com/ishizaki-taishi/TwitterObserver">github</a>
 
             </nav>
         </header>
 
         <div class="bd-pageheader" style="background: #f0f9ff; border-bottom: solid 1px #3879D8;">
             <app-container>
-
-                <h2>
-
+                <h2 style="margin: 1rem;">
                     <app-icon fa="database"></app-icon> Rows: {{ databaseCapacity.count }} of {{ databaseCapacity.max }}
+                    <span style="opacity:0">_</span>
+                    <app-icon fa="users"></app-icon> FF: {{ ff.checkedCount }} of {{ databaseCapacity.count }}
+
 
                 </h2>
             </app-container>
@@ -92,10 +97,29 @@
 
                         <!-- v-bind:id="'list-' + id"-->
 
-                        <button id="open-spreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+                        <button @click="openSpreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="btn btn-outline-success" type="submit">Spreadsheet</button>
+
+                        <button disabled type="button" class="btn btn-outline-danger remove-observe-tweet" data-id="${id}" onclick="socket.emit('remove-target-tweet', ${id})">Delete</button>
 
 
-                        <input disabled type="button" role='button' class="btn btn-outline-danger remove-observe-tweet" value="Delete" data-id="${id}" onclick="socket.emit('remove-target-tweet', ${id})" />
+
+
+                        <div style="margin: .5rem 0;">
+
+                            <div class="form-inline" style="background: linear-gradient(60deg, rgb(247, 149, 51), rgb(243, 112, 85), rgb(239, 78, 123), rgb(161, 102, 171), rgb(80, 115, 184), rgb(16, 152, 173), rgb(7, 179, 155), rgb(111, 186, 130));display: inline-block;border-radius: 4px;">
+                                <button type="button" role="button" class="btn" style="
+                                            margin: 2px;
+                                            background: #fff;
+                                            border-radius: 4px;
+                                            ">抽選</button>
+                            </div>
+
+                            <div class="form-inline" style="display: inline-block">
+                                <input type="number" maxlength="14" v-model="inputTime" placeholder="until time" class="form-control">
+                            </div>
+                            <span>{{ time }}</span>
+
+                        </div>
 
                         <div :id="'oembed-' + tweet.id" v-html="tweet.oembed"></div>
 
@@ -112,7 +136,7 @@
                 <div id="right" class="col-12 col-md-8 bg-content">
 
 
-                    <h2>retweets: {{retweeters.length || 'loading...'}}</h2>
+                    <h2><app-icon fa="retweet"></app-icon> retweets: {{retweeters.length || 'loading...'}}</h2>
 
                     <div id="log" style="max-height: 50vh; overflow: scroll;">
 
@@ -130,6 +154,8 @@
 
 
         </div>
+
+
 
 
 
