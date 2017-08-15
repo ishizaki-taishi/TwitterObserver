@@ -9,15 +9,13 @@ const io = require('socket.io')(http);
 io.listen(http);
 
 
-//
 process.on('unhandledRejection', console.dir);
-
 
 
 app.use(express.static('public'));
 
 
-const { QueryString } = require('./utils');
+// const { QueryString } = require('./utils');
 
 
 const DATABASE_CAPACITY = 10000;
