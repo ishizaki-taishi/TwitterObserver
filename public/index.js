@@ -52,7 +52,13 @@ class Tweet {
 
     constructor() {
 
-        this.id = '';
+        this.id = Math.random();
+
+    }
+
+    static from(data) {
+
+        this.id = data.id;
 
     }
 
@@ -376,6 +382,15 @@ socket.on('spreadsheet', (ss) => {
 });
 
 socket.on('observe-tweets', (tweets) => {
+
+
+    for (const tweet of tweets) {
+
+        app.$data.tweets.push(tweet);
+
+    }
+
+    console.log('Tweets', tweets);
 
     app.$data.observeTweets = tweets;
 
