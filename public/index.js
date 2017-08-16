@@ -2,6 +2,8 @@ const socket = io(location.href.replace('http', 'ws'), {
     transports: ['websocket']
 });
 
+const TW_ID = '600720083413962752';
+
 window.socket = socket;
 
 function shuffle(array) {
@@ -43,6 +45,17 @@ class User {
 
     static from(data) {
 
+        const user = new User();
+
+        user.id = data.id;
+        user.name = data.name;
+        user.screenName = data.screen_name;
+        user.followCount = data.friends_count;
+        user.followerCount = data.followers_count;
+        user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
+
+        return user;
+
     }
 
 }
@@ -53,12 +66,18 @@ class Tweet {
     constructor() {
 
         this.id = Math.random();
+        this.retweeters = [];
 
     }
 
     static from(data) {
 
-        this.id = data.id;
+        const tweet = new Tweet();
+
+        tweet.id = data.id;
+        tweet.oembed = data.oembed;
+
+        return tweet;
 
     }
 
@@ -82,9 +101,12 @@ Vue.component('app-container', {
 });
 
 
-function lottery() {
+function lottery(id) {
 
-    let retweeters = [...app.$data.retweeters];
+
+    const tweet = getTweet(id);
+
+    let retweeters = [...tweet.retweeters];
 
     const ffCheckEl = document.querySelector('#ff-check');
     const ffRatioBoaderEl = document.querySelector('#ff-check-ratio-boader');
@@ -140,6 +162,59 @@ let lotteryResolver = null;
 const lotteryUserResolvers = {};
 
 
+async function $lottery({ target }, n) {
+
+    const id = target.getAttribute('tweet-id');
+
+    app.$data.lottery.users = [];
+
+    const users = [];
+
+
+
+    $('#lottery-dialog').modal();
+
+
+    // n 回抽選する
+    for (let i = n; i--;) {
+
+        // 当選者
+        const retweeter = lottery(id);
+        const user = User.from(retweeter);
+
+        users.push(user);
+
+
+        console.log('抽選結果: ', user);
+
+
+
+    }
+
+
+    app.$data.lottery.users = users;
+
+    await Vue.nextTick();
+
+
+    // ユーザー TL を生成
+    for (const user of users) {
+
+        const el = document.querySelector(`#lu${user.id}`);
+        el.innerHTML = '';
+
+        twttr.widgets.createTimeline(TW_ID, el, {
+            screenName: user.screenName
+        });
+
+    }
+
+
+
+
+}
+
+
 const app = new Vue({
     el: '#app',
     data: {
@@ -150,15 +225,17 @@ const app = new Vue({
 
         observeTweets: [],
 
+        // 抽選
         lottery: {
+
+            users: [],
+
+
             name: '',
             screen_name: ''
         },
 
-        // n 連抽選の結果
-        lotteryUsers: [
 
-        ],
 
         ff: {
             checkedCount: 0
@@ -174,7 +251,7 @@ const app = new Vue({
         inputTime: '',
         time: null,
 
-        retweeters: []
+
 
     },
     methods: {
@@ -184,7 +261,11 @@ const app = new Vue({
             socket.emit('spreadsheet');
         },
 
-        async openLotteryDialog10() {
+        async openLotteryDialog10(e) {
+
+            $lottery(e, 10);
+
+            return;
 
             const lotteryUsers = [];
 
@@ -248,52 +329,15 @@ const app = new Vue({
             }
 
 
-            /*
-            twttr.widgets.createTimeline(
-                '600720083413962752',
-                userEl, {
-                    screenName: retweeter.screen_name
-                }
-            );
-            */
 
 
 
         },
 
-        openLotteryDialog() {
 
-            app.$data.lotteryOembed = 'loading...';
+        openLotteryDialog(e) {
 
-            const retweeter = lottery();
-
-            /*
-            app.$data.lottery.name = retweeter.name;
-            app.$data.lottery.screen_name = retweeter.screen_name;
-
-            app.$data.lottery.friends_count = retweeter.friends_count;
-            app.$data.lottery.followers_count = retweeter.followers_count;
-
-            */
-            app.$data.lottery = retweeter;
-            app.$data.lottery.ff = (retweeter.followers_count / retweeter.friends_count).toFixed(2);
-
-
-            console.log('抽選結果: ', retweeter);
-
-            const userEl = document.querySelector('#lottery-user');
-            userEl.innerHTML = '';
-
-            twttr.widgets.createTimeline(
-                '600720083413962752',
-                userEl, {
-                    screenName: retweeter.screen_name
-                }
-            );
-
-            socket.emit('lottery-oembed', retweeter.screen_name);
-
-            $('#lottery-dialog').modal();
+            $lottery(e, 1);
 
         },
 
@@ -318,8 +362,6 @@ const app = new Vue({
 });
 
 
-app.$data.tweets.push(new Tweet());
-app.$data.tweets.push(new Tweet());
 
 
 socket.on('lottery-oembed', (oembed) => {
@@ -381,14 +423,25 @@ socket.on('spreadsheet', (ss) => {
     _spreadsheet_id = ss.spreadsheet_id;
 });
 
-socket.on('observe-tweets', (tweets) => {
+
+
+
+socket.on('observe-tweets', async(tweets) => {
 
 
     for (const tweet of tweets) {
 
-        app.$data.tweets.push(tweet);
+        app.$data.tweets.push(Tweet.from(tweet));
 
     }
+
+
+    app.$data.tweets.push(new Tweet());
+    app.$data.tweets.push(new Tweet());
+
+    await Vue.nextTick();
+
+    updateOembeds();
 
     console.log('Tweets', tweets);
 
@@ -405,10 +458,17 @@ $('#open-spreadsheet').on('shown.bs.modal', () => {
 
 document.querySelector('#spreadsheet-link').addEventListener('click', () => {
 
-
     window.open(`https://docs.google.com/spreadsheets/d/${_spreadsheet_id}`);
 
 });
+
+
+
+function updateOembeds() {
+    for (const el of document.querySelectorAll('.twitter-tweet')) {
+        twttr.widgets.load(el);
+    }
+}
 
 
 socket.on('spreadsheet-end', () => {
@@ -417,8 +477,18 @@ socket.on('spreadsheet-end', () => {
 });
 
 
+function getTweet(id) {
+    return app.$data.tweets.filter((tweet) => tweet.id === id)[0];
+}
 
-socket.on('retweeters', (retweeters) => app.$data.retweeters = retweeters);
+
+socket.on('retweeters', ({ id, retweeters }) => {
+
+    const tweet = getTweet(id);
+
+    tweet.retweeters = retweeters;
+
+});
 
 
 document.querySelector('#add').addEventListener('click', function() {

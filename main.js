@@ -322,6 +322,20 @@ fetchUserStatus();
 setInterval(fetchUserStatus, 3000);
 
 
+
+class DB {
+
+    constructor() {
+
+    }
+
+
+}
+
+
+
+
+
 io.sockets.on('connection', async(socket) => {
 
 
@@ -346,9 +360,6 @@ io.sockets.on('connection', async(socket) => {
 
     })();
 
-
-
-    //    return;
 
     (async() => {
 
@@ -401,11 +412,19 @@ io.sockets.on('connection', async(socket) => {
 
     (async() => {
 
-        const { response } = await query(`SELECT * FROM retweeters WHERE invalid IS NULL OR invalid = FALSE`);
-        // const { response } = await query(`SELECT * FROM retweeters`);
+
+        for (const id of observeTweets) {
+
+            const { response } = await query(`SELECT * FROM retweeters WHERE target_id = '${id}'`);
+            // const { response } = await query(`SELECT * FROM retweeters`);
 
 
-        io.emit('retweeters', response.rows);
+            io.emit('retweeters', {
+                id,
+                retweeters: response.rows
+            });
+
+        }
 
     })();
 
@@ -434,7 +453,7 @@ io.sockets.on('connection', async(socket) => {
 
         console.log('抽選結果の oembed を取得します: ', res.statuses[0].retweeted_status);
         /*
-        */
+         */
         // console.log('oembed を取得しました: ', html);
 
         // const id = res.statuses[0].id_str;
@@ -569,5 +588,5 @@ app.get('/', async(req, res) => {
 });
 
 http.listen(port, function() {
-    console.log('Example app listening on port 3000!');
+    console.log(`App listening on port ${port}`);
 });
