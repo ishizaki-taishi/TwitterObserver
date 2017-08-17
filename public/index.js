@@ -509,7 +509,7 @@ function getTweet(id) {
 }
 
 
-socket.on('retweeters', ({ id, retweeters }) => {
+socket.on('retweeters', async({ id, retweeters }) => {
 
 
 
