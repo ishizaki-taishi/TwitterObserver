@@ -211,7 +211,7 @@ async function getRT() {
                 // 正常に取得できた場合、既に登録されている
 
                 const { error, response } = await query(`SELECT FROM retweeters WHERE target_id = '${targetID}' AND id = '${userID}'`);
-                if (!error || response.rowCount) {
+                if (!error && response.rowCount) {
                     console.log(`重複: @${index} ${userID}`);
                     continue;
                 }
