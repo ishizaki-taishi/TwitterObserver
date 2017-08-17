@@ -1,21 +1,15 @@
 const port = process.env.PORT || 3000;
 
-const express = require('express');
 
+const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-
 io.listen(http);
-
-
-process.on('unhandledRejection', console.dir);
-
-
 app.use(express.static('public'));
 
 
-// const { QueryString } = require('./utils');
+process.on('unhandledRejection', console.dir);
 
 
 const DATABASE_CAPACITY = 10000;
@@ -54,7 +48,6 @@ function pgFormatDate(date) {
 
 
 const Twitter = require('twitter');
-
 const client = new Twitter({
     consumer_key: 'KBARD1nq3jV1rrxPg9eHAvavo',
     consumer_secret: 'HeCtqZag01SZmbbbIV7WWX0glX44RqGCtBa28qMMnSWecKarIL',
@@ -111,25 +104,14 @@ function dbQuery(query) {
 }
 
 
-let lastRetweetUserID = null;
-/*
-dbClient.query(`SELECT id FROM retweeters ORDER BY created_at DESC LIMIT 3`, (e, res) => {
-    lastRetweetUserID = res.rows[0].id;
-    lastRetweetUserID = '894812207384379392';
-});
-*/
-
-/* 重複削除
-
-CREATE TEMPORARY TABLE fruits3_tmp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
-DELETE FROM retweeters;
-INSERT INTO retweeters SELECT * FROM fruits3_tmp;
-DROP TABLE fruits3_tmp;
-
-*/
 
 
 let observeTweets = [];
+
+
+function getObserveTweetIds() {
+    return observeTweets;
+}
 
 
 
@@ -137,6 +119,12 @@ const { create, update } = require('./spreadsheet');
 
 // リツイート情報をスプレッドシートに反映する
 async function writeSpreadsheet() {
+
+
+    console.error('複数ツイートに対応していません');
+
+    return;
+
 
     console.log('スプレッドシートに書き込みます');
 
@@ -197,12 +185,16 @@ async function getRT() {
 
         io.emit('log', 'DB Connection' + connectionString);
 
-        for (const id of observeTweets) {
+        let index = 0;
+
+        for (const id of getObserveTweetIds()) {
+
+            ++index;
+
 
             const targetID = id;
 
             // RT 情報を取得する
-            // const response = await get('statuses/retweeters/ids', { id, stringify_ids: true });
             const response = await get('statuses/retweets/' + id, { id, count: 100, trim_user: false });
 
 
@@ -216,16 +208,15 @@ async function getRT() {
                 // RT したユーザーの内部 ID
                 const userID = user.id_str;
 
-                console.log('UserID: ', userID);
+                // 正常に取得できた場合、既に登録されている
 
+                const { error, response } = await query(`SELECT FROM retweeters WHERE target_id = '${targetID}' AND id = '${userID}'`);
+                if (!error || response.rowCount) {
+                    console.log(`重複: @${index} ${userID}`);
+                    continue;
+                }
 
-                const r = await query(`DELETE FROM retweeters WHERE id = '${userID}'`);
-
-                if (r.response.rawCount) console.log('重複: ', r);
-
-
-
-
+                console.log('リツイーターを取得しました: ', userID);
                 io.emit('log', `user id: ${userID}`);
 
 
@@ -246,8 +237,6 @@ async function getRT() {
             }
 
 
-            // 最後に RT したユーザーを更新
-            lastRetweetUserID = response[0].user.id_str;
 
 
 
@@ -258,47 +247,36 @@ async function getRT() {
     }
 
 
-    /*
-        dbClient.query(`
-            CREATE TEMPORARY TABLE _temp AS SELECT MIN(id), id FROM retweeters GROUP BY id;
-            DELETE FROM retweeters;
-            INSERT INTO retweeters SELECT * FROM _temp;
-            DROP TABLE _temp;
-
-            `, (err, result) => {
-            console.log(err, result);
-        });
-    */
-
-
-
 }
 
 
 
 // beta
 getRT();
-setInterval(getRT, RequestInterval.StatusesRetweetersIds);
+setInterval(getRT, RequestInterval.StatusesRetweetersIds * 2);
 
 
 
 async function fetchUserStatus() {
 
+    // 全てのリツイーター（全ての監視ツイート）から情報を取得できていない 1 ユーザーを取得する
     const w = await query('SELECT * FROM retweeters WHERE invalid IS NULL OR friends_count IS NULL LIMIT 1');
 
     if (w.error) return;
+    if (!w.response.rowCount) return;
 
     const userID = w.response.rows[0].id;
 
 
     try {
 
+        // users/show API からユーザー情報を取得する
         let { name, screen_name, friends_count, followers_count } = await get('users/show', { user_id: userID });
 
+        // 名前に ' などが入っていると SQL 文が壊れる
         name = escapeSQL(name);
 
-        //console.log('フォロー, フォロワー', friends_count, followers_count, screen_name);
-
+        // ユーザー情報を反映
         const r = await query(`UPDATE retweeters SET name = '${name}', screen_name = '${screen_name}', friends_count = ${friends_count}, followers_count = ${followers_count}, invalid = FALSE WHERE id = '${userID}'`);
         console.log('ユーザー名を取得しました', userID, '@' + screen_name); //, r);
     }
@@ -306,12 +284,11 @@ async function fetchUserStatus() {
     // ユーザーが存在しない
     catch (e) {
 
+        // 不正ユーザー値を登録
         const r = await query(`UPDATE retweeters SET invalid = TRUE, friends_count = -1, followers_count = -1 WHERE id = '${userID}'`);
         console.log('ユーザー名の取得に失敗しました', userID); //, r);
 
     }
-
-
 
 
 }
@@ -319,7 +296,7 @@ async function fetchUserStatus() {
 
 
 fetchUserStatus();
-setInterval(fetchUserStatus, 3000);
+setInterval(fetchUserStatus, 3000 * 2);
 
 
 
@@ -338,8 +315,6 @@ class DB {
 
 io.sockets.on('connection', async(socket) => {
 
-
-    io.emit('log', 'Last RT: ' + lastRetweetUserID);
 
 
     io.emit('log', `API Interval: ${interval}`);
@@ -371,8 +346,6 @@ io.sockets.on('connection', async(socket) => {
             const { html } = await get('statuses/oembed', {
                 url: `https://twitter.com/_/status/${id}`
             });
-
-
 
             console.log('oembed');
 
@@ -410,14 +383,12 @@ io.sockets.on('connection', async(socket) => {
 
 
 
+    // リツイーターの情報を投げる
     (async() => {
 
-
-        for (const id of observeTweets) {
+        for (const id of getObserveTweetIds()) {
 
             const { response } = await query(`SELECT * FROM retweeters WHERE target_id = '${id}'`);
-            // const { response } = await query(`SELECT * FROM retweeters`);
-
 
             io.emit('retweeters', {
                 id,
@@ -429,9 +400,10 @@ io.sockets.on('connection', async(socket) => {
     })();
 
 
+
     socket.on('add-target-tweet', (id) => {
 
-        dbClient.query(`INSERT INTO observe_tweets (id) VALUES (${id})`, (err, res) => {
+        dbClient.query(`INSERT INTO observe_tweets (id) VALUES ('${id}')`, (err, res) => {
 
             updateObserveTweets();
 
@@ -492,78 +464,6 @@ io.sockets.on('connection', async(socket) => {
 
     });
 
-
-
-
-
-    socket.on('TEST', async() => {
-
-        var result = [];
-
-        const id = '894751560403632128';
-
-        const res = await get('search/tweets', {
-
-            q: 'Switch filter:retweets @dabisto_jp',
-            count: 100,
-            since_id: id
-
-        });
-
-
-
-        result.push(...res.statuses);
-
-        let next = res.search_metadata.next_results;
-
-        while (true) {
-            const params = QueryString.parse(next.substr(1));
-            const res2 = await get('search/tweets', params);
-            next = res2.search_metadata.next_results;
-
-            result.push(...res2.statuses);
-            if (!next) break;
-
-        }
-
-        io.emit('log', result);
-
-        io.emit('log', '検索情報からテーブルを更新します');
-
-        let _count = 0;
-
-        for (var w of result) {
-
-
-
-            const userID = w.user.id_str;
-
-            console.log(userID);
-
-            const w2 = await query(`SELECT * FROM retweeters WHERE id = '${userID}'`);
-
-            io.emit('log', 'ID チェック: ' + (++_count));
-            // 既に存在している
-            if (w2.response.rowCount) continue;
-
-            io.emit('log', '登録されていないユーザーです！: ' + userID);
-
-            const createdAt = pgFormatDate(w.created_at);
-
-
-            await query(`
-
-                                INSERT INTO retweeters
-                                    (id, created_at)
-                                    VALUES
-                                    ('${userID}', to_timestamp('${createdAt}', 'YYYY MM DD HH24 MI SS'))
-
-                            `);
-
-        }
-
-
-    });
 
 
 

@@ -434,10 +434,7 @@ socket.on('observe-tweets', async(tweets) => {
         app.$data.tweets.push(Tweet.from(tweet));
 
     }
-
-
-    app.$data.tweets.push(new Tweet());
-    app.$data.tweets.push(new Tweet());
+    
 
     await Vue.nextTick();
 

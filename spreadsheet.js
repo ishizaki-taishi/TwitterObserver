@@ -6,15 +6,16 @@ var googleAuth = require('google-auth-library');
 
 let io = null;
 
+
 console.emit = function emit(...args) {
     console.log(...args);
     io.emit('log', args.join(' '));
 };
 
-
-
 class Spreadsheet {
     constructor() {
+
+
 
     }
 }
@@ -23,9 +24,7 @@ class Spreadsheet {
 let auth = null;
 
 
-// If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']; //,      'https://www.googleapis.com/auth/drive'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
 
@@ -43,13 +42,7 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     authorize(JSON.parse(content), listMajors);
 });
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- *
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
+
 function authorize(credentials, callback) {
 
     console.log('Authorize: ', credentials);
@@ -82,14 +75,7 @@ function authorize(credentials, callback) {
 }
 
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- *
- * @param {google.auth.OAuth2} oauth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback to call with the authorized
- *     client.
- */
+
 function getNewToken(oauth2Client, callback) {
 
     var authUrl = oauth2Client.generateAuthUrl({
@@ -116,11 +102,7 @@ function getNewToken(oauth2Client, callback) {
     });
 }
 
-/**
- * Store token to disk be used in later program executions.
- *
- * @param {Object} token The token to store to disk.
- */
+
 function storeToken(token) {
     try {
         fs.mkdirSync(TOKEN_DIR);
@@ -360,16 +342,9 @@ module.exports = {
 };
 
 
-/**
- * Print the names and majors of students in a sample spreadsheet:
- * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- */
 function listMajors(auth) {
 
     __auth = auth;
-
-
-
 
     return;
 
