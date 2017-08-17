@@ -75,6 +75,7 @@ class Tweet {
         const tweet = new Tweet();
 
         tweet.id = data.id;
+        tweet.spreadsheetId = null; // data.spreadsheet_id;
         tweet.oembed = data.oembed;
 
         return tweet;
@@ -225,6 +226,15 @@ const app = new Vue({
 
         observeTweets: [],
 
+        modals: {
+
+            spreadsheet: {
+                done: false,
+                targetTweetId: null
+            }
+
+        },
+
         // 抽選
         lottery: {
 
@@ -251,14 +261,29 @@ const app = new Vue({
         inputTime: '',
         time: null,
 
-
-
     },
     methods: {
 
+        // スプレッドシートに書き込む
+        writeSpreadsheet({ target }) {
+
+            const id = target.getAttribute('tweet-id');
+
+            app.$data.modals.spreadsheet.targetTweetId = id;
+
+            console.log('スプレッドシートを開きます', id);
+
+            socket.emit('spreadsheet', id);
+        },
+
         openSpreadsheet() {
-            console.log('スプレッドシートを開きます');
-            socket.emit('spreadsheet');
+
+            const tweetId = app.$data.modals.spreadsheet.targetTweetId;
+
+            const id = getTweet(tweetId).spreadsheetId;
+
+            window.open(`https://docs.google.com/spreadsheets/d/${id}`);
+
         },
 
         async openLotteryDialog10(e) {
@@ -420,7 +445,7 @@ socket.on('ff-checked', (count) => {
 });
 
 socket.on('spreadsheet', (ss) => {
-    _spreadsheet_id = ss.spreadsheet_id;
+    getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
 });
 
 
@@ -434,7 +459,7 @@ socket.on('observe-tweets', async(tweets) => {
         app.$data.tweets.push(Tweet.from(tweet));
 
     }
-    
+
 
     await Vue.nextTick();
 
@@ -453,12 +478,6 @@ $('#open-spreadsheet').on('shown.bs.modal', () => {
 });
 
 
-document.querySelector('#spreadsheet-link').addEventListener('click', () => {
-
-    window.open(`https://docs.google.com/spreadsheets/d/${_spreadsheet_id}`);
-
-});
-
 
 
 function updateOembeds() {
@@ -469,8 +488,7 @@ function updateOembeds() {
 
 
 socket.on('spreadsheet-end', () => {
-    document.querySelector('#spreadsheet-progress').textContent = '上書きに成功しました！';
-    document.querySelector('#spreadsheet-link').disabled = '';
+    app.$data.modals.spreadsheet.done = true;
 });
 
 

@@ -118,19 +118,13 @@ function getObserveTweetIds() {
 const { create, update } = require('./spreadsheet');
 
 // リツイート情報をスプレッドシートに反映する
-async function writeSpreadsheet() {
-
-
-    console.error('複数ツイートに対応していません');
-
-    return;
-
+async function writeSpreadsheet(id) {
 
     console.log('スプレッドシートに書き込みます');
 
-    const { spreadsheet_id } = (await query('SELECT * FROM observe_tweets')).response.rows[0];
+    const { spreadsheet_id } = (await query(`SELECT * FROM observe_tweets WHERE id = '${id}'`)).response.rows[0];
 
-    const retweeters = (await query('SELECT * FROM retweeters')).response.rows;
+    const retweeters = (await query(`SELECT * FROM retweeters WHERE target_id = '${id}'`)).response.rows;
 
     const result = await update(spreadsheet_id, retweeters, io);
 
@@ -440,8 +434,8 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
-    socket.on('spreadsheet', () => {
-        writeSpreadsheet();
+    socket.on('spreadsheet', (id) => {
+        writeSpreadsheet(id);
     });
 
 

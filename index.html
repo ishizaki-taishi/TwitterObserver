@@ -102,14 +102,14 @@
 
                     <hr>
 
-                    <button @click="openSpreadsheet" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="mb-2 btn btn-outline-success" type="submit">Spreadsheet</button>
+                    <button @click="writeSpreadsheet" :disabled="!tweet.retweeters.length" :tweet-id="tweet.id" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="mb-2 btn btn-outline-success" type="submit">Spreadsheet</button>
 
                     <button disabled type="button" class="mb-2 btn btn-outline-danger">削除</button>
 
                     <hr>
 
                     <div class="form-inline gradient-7">
-                        <button @click="openLotteryDialog" :tweet-id="tweet.id" type="button" role="button" class="btn">
+                        <button @click="openLotteryDialog" :disabled="!tweet.retweeters.length" :tweet-id="tweet.id" type="button" role="button" class="btn">
                             抽選
                         </button>
                     </div>
@@ -118,7 +118,7 @@
 
                     <div class="form-inline" style="background: linear-gradient(60deg, rgb(247, 149, 51), rgb(243, 112, 85), rgb(239, 78, 123), rgb(161, 102, 171), rgb(80, 115, 184), rgb(16, 152, 173), rgb(7, 179, 155), rgb(111, 186, 130));display: inline-block;border-radius: 4px;">
 
-                        <button @click="openLotteryDialog10" :tweet-id="tweet.id" type="button" role="button" class="btn" style="margin: 2px;background: #fff;border-radius: 4px;">
+                        <button @click="openLotteryDialog10" :disabled="!tweet.retweeters.length" :tweet-id="tweet.id" type="button" role="button" class="btn" style="margin: 2px;background: #fff;border-radius: 4px;">
                             10 連ガチャ
                         </button>
 
@@ -202,11 +202,13 @@
             </button>
                     </div>
                     <div id="spreadsheet-progress" class="modal-body">
-                        スプレッドシートに書き込んでいます...
+                        {{ modals.spreadsheet.done ? '上書きに成功しました！' : 'スプレッドシートに書き込んでいます...' }}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">中止</button>
-                        <button id="spreadsheet-link" disabled type="button" class="btn btn-success">スプレッドシートを開く</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            {{ modals.spreadsheet.done ? '閉じる' : '中止' }}
+                        </button>
+                        <button @click="openSpreadsheet" :disabled="!modals.spreadsheet.done" type="button" class="btn btn-success">スプレッドシートを開く</button>
                     </div>
                 </div>
             </div>
