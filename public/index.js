@@ -444,7 +444,29 @@ socket.on('ff-checked', (count) => {
     app.$data.ff.checkedCount = count;
 });
 
-socket.on('spreadsheet', (ss) => {
+socket.on('spreadsheet', (ss) =>
+
+
+    console.log(ss);
+
+
+    /*
+    await new Promise((resolve) => {
+
+        const id = setInterval(() => {
+
+            if (ss.)
+
+
+
+        }, 500);
+
+    });
+    */
+
+
+
+
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
 });
 
