@@ -96,7 +96,7 @@
             <div class="row" style="padding-top: 2rem;">
 
 
-                <div class="left col-12 col-md-4" style="padding-top: 1rem; overflow: auto">
+                <div class="left col-12 col-md-4">
 
                     <h2 style="word-break: break-all;"><app-icon fa="twitter"></app-icon>{{ tweet.id }}</h2>
 
@@ -127,11 +127,13 @@
 
                     <hr>
 
+                    <app-icon fa="cog"></app-icon>
+
 
                     <div class="form-inline" style="margin: .5rem 0;">
 
                         <input type="checkbox" id="ff-check" class="form-inline form-control">　FF 比で制限する
-                        <input type="number" id="ff-check-ratio-boader" maxlength="14" placeholder="FF ratio boader" class="form-control">
+                        <input type="number" id="ff-check-ratio-border" maxlength="14" placeholder="FF ratio border" class="form-control">
 
                     </div>
 
@@ -185,6 +187,20 @@
         </div>
 
 
+
+
+
+        <div class="container">
+            <div class="row shadow-box" style="padding: 1rem;">
+                test
+
+                <div v-for="tweet in tweets">
+                    <input type="checkbox">
+                    <label>{{ tweet.id }}</label>
+                </div>
+
+            </div>
+        </div>
 
 
 
@@ -258,6 +274,15 @@
         <br>
         <br>
 
+        <footer class="footer">
+
+
+            <div class="container">
+                <div class="row">
+                    footer
+                </div>
+            </div>
+        </footer>
 
     </div>
 

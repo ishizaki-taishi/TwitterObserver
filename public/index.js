@@ -110,15 +110,15 @@ function lottery(id) {
     let retweeters = [...tweet.retweeters];
 
     const ffCheckEl = document.querySelector('#ff-check');
-    const ffRatioBoaderEl = document.querySelector('#ff-check-ratio-boader');
+    const ffRatioBoaderEl = document.querySelector('#ff-check-ratio-border');
 
     const aRtCnt = retweeters.length;
 
     if (ffCheckEl.checked) {
 
-        const boader = parseFloat(ffRatioBoaderEl.value);
+        const border = parseFloat(ffRatioBoaderEl.value);
 
-        console.log('FF 比許容範囲: ' + boader);
+        console.log('FF 比許容範囲: ' + border);
 
         retweeters = retweeters.filter((retweeter) => {
 
@@ -135,7 +135,7 @@ function lottery(id) {
             //
             const ratio = retweeter.followers_count / retweeter.friends_count;
 
-            return (ratio >= boader);
+            return (ratio >= border);
 
         });
 
