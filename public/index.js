@@ -511,6 +511,16 @@ function getTweet(id) {
 
 socket.on('retweeters', ({ id, retweeters }) => {
 
+
+
+    await new Promise((resolve) => {
+        const c_id = setInterval(() => {
+            // ツイート情報が取得できたら resolve
+            if (getTweet(id)) resolve();
+            clearInterval(c_id);
+        }, 100);
+    });
+
     const tweet = getTweet(id);
 
     tweet.retweeters = retweeters;
