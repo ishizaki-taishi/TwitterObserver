@@ -13,14 +13,10 @@ body {
     box-shadow: 0 0 0 1px rgba(89, 105, 128, .1), 0 1px 3px 0 rgba(89, 105, 128, .1), 0 1px 2px 0 rgba(0, 0, 0, .05);
 }
 
-
 .shadow-box {
     box-shadow: 0 0 0 1px rgba(89, 105, 128, .1), 0 1px 3px 0 rgba(89, 105, 128, .1), 0 1px 2px 0 rgba(0, 0, 0, .05);
-
     border-radius: 4px;
 }
-
-
 
 .left {
     padding-top: 1rem;
@@ -85,4 +81,32 @@ body {
     overflow-y: scroll;
     max-width: 50%;
     /*align-self: stretch;*/
+}
+
+
+/* always present */
+
+.expand-transition {
+    transition: all .3s ease;
+    height: 30px;
+    padding: 10px;
+    background-color: #eee;
+    overflow: hidden;
+}
+
+.expand-enter, .expand-leave {
+    height: 0;
+    padding: 0 10px;
+    opacity: 0;
+}
+
+.fade-enter-active, .fade-leave-active {
+    transition: opacity .5s
+}
+
+.fade-enter, .fade-leave-to
+/* .fade-leave-active below version 2.1.8 */
+
+{
+    opacity: 0
 }

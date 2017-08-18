@@ -1,4 +1,4 @@
-const QueryString = {
+export const QueryString = {
     parse(text, sep, eq, isDecode = true) {
         text = text || location.search.substr(1);
         if (isDecode) text = decodeURIComponent(text);
@@ -24,8 +24,26 @@ const QueryString = {
 
 
 
-module.exports = {
+export function shuffle(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var r = Math.floor(Math.random() * (i + 1));
+        var tmp = array[i];
+        array[i] = array[r];
+        array[r] = tmp;
+    }
+    return array;
+}
 
-    QueryString
+export function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 
-};
+export function formatTime16(text) {
+    const format = '0123-45-67T89:ab:cd';
+    return format.split('').map((value) => {
+        if (!value.match(/[0-9a-d]/)) return value;
+        return text[parseInt(value, 16)];
+    }).join('');
+}
