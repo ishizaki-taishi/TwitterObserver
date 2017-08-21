@@ -252,6 +252,9 @@ app = new Vue({
         time: null,
 
     },
+
+
+
     methods: {
 
         toggleOptions() {
@@ -278,6 +281,8 @@ app = new Vue({
             const tweetId = app.$data.modals.spreadsheet.targetTweetId;
 
             const id = getTweet(tweetId).spreadsheetId;
+
+            console.log(getTweet(tweetId));
 
             window.open(`https://docs.google.com/spreadsheets/d/${id}`);
 
@@ -325,6 +330,8 @@ app = new Vue({
 
 
 
+Vue.app = app;
+
 
 
 
@@ -364,9 +371,10 @@ socket.on('ff-checked', (count) => {
 });
 
 socket.on('spreadsheet', async(ss) => {
+    console.log('spreadsheet の情報を取得しました', ss);
 
+    await waitTweetLoaded(ss.id);
 
-    await waitTweetLoaded();
 
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;

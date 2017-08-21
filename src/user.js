@@ -19,6 +19,8 @@ export default class User {
         user.followCount = data.friends_count;
         user.followerCount = data.followers_count;
 
+        user.createdAt = data.created_at;
+
         // user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
 
         return user;

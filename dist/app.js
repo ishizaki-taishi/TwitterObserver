@@ -346,6 +346,7 @@ app = new _vue2.default({
         time: null
 
     },
+
     methods: {
         toggleOptions: function toggleOptions() {
             // this.view
@@ -375,6 +376,8 @@ app = new _vue2.default({
             var tweetId = app.$data.modals.spreadsheet.targetTweetId;
 
             var id = getTweet(tweetId).spreadsheetId;
+
+            console.log(getTweet(tweetId));
 
             window.open('https://docs.google.com/spreadsheets/d/' + id);
         },
@@ -411,6 +414,8 @@ app = new _vue2.default({
 
 });
 
+_vue2.default.app = app;
+
 socket.on('database-capacity', function (databaseCapacity) {
     app.$data.databaseCapacity = databaseCapacity;
 });
@@ -441,8 +446,9 @@ socket.on('ff-checked', function (count) {
 });
 
 socket.on('spreadsheet', async function (ss) {
+    console.log('spreadsheet の情報を取得しました', ss);
 
-    await waitTweetLoaded();
+    await waitTweetLoaded(ss.id);
 
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
@@ -9889,6 +9895,8 @@ var User = function () {
             user.followCount = data.friends_count;
             user.followerCount = data.followers_count;
 
+            user.createdAt = data.created_at;
+
             // user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
 
             return user;
@@ -9980,6 +9988,97 @@ function createVueComponents(Vue) {
 
     Vue.component('app-space', {
         template: '#space-template'
+    });
+
+    Vue.component('app-graph', {
+
+        template: '#graph-template',
+
+        props: ['twid'],
+
+        created: async function created() {
+
+            var app = Vue.app;
+
+            await new Promise(function (resolve) {
+                return setTimeout(resolve, 100);
+            });
+
+            var context = this.$el.getContext('2d');
+
+            var id = this.$el.getAttribute('tweet-id');
+
+            var tweet = app.$data.tweets.filter(function (tweet) {
+                return tweet.id === id;
+            })[0];
+
+            await new Promise(function (resolve) {
+                var clear = setInterval(function () {
+                    if (!tweet.retweeters || !tweet.retweeters.length) return;
+                    resolve();
+                    clearInterval(clear);
+                }, 100);
+            });
+
+            var retweeters = tweet.retweeters;
+
+            var counts = Array.from({ length: 24 }).fill(0);
+
+            retweeters.forEach(function (user) {
+
+                var hour = new Date(user.createdAt).getHours();
+
+                ++counts[hour];
+            });
+
+            var chart = new Chart(context, {
+                type: 'line',
+                data: {
+
+                    labels: Array.from({ length: 24 }).map(function (_, index) {
+                        return index;
+                    }),
+
+                    // label: 'tedt',
+                    // labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+                    datasets: [{
+                        label: '# of retweets',
+                        data: counts,
+                        backgroundColor: ['rgba(255, 99, 132, 0.2)'],
+                        borderColor: ['rgba(255,99,132,1)'],
+
+                        /*
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        */
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        }
     });
 };
 
