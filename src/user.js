@@ -18,10 +18,15 @@ export default class User {
         user.screenName = data.screen_name;
         user.followCount = data.friends_count;
         user.followerCount = data.followers_count;
-        user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
+
+        // user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
 
         return user;
 
+    }
+
+    get ffRatio() {
+        return this.followerCount / this.followCount;
     }
 
 }

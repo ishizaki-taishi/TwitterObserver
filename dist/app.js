@@ -60,44 +60,37 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 107);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 107:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _vue = __webpack_require__(251);
+var _vue = __webpack_require__(1);
 
 var _vue2 = _interopRequireDefault(_vue);
 
-var _utils = __webpack_require__(248);
+var _utils = __webpack_require__(3);
 
-var _user = __webpack_require__(254);
+var _user = __webpack_require__(4);
 
 var _user2 = _interopRequireDefault(_user);
 
-var _tweet = __webpack_require__(253);
+var _tweet = __webpack_require__(5);
 
 var _tweet2 = _interopRequireDefault(_tweet);
 
-var _vueComponents = __webpack_require__(255);
+var _vueComponents = __webpack_require__(6);
 
 var _vueComponents2 = _interopRequireDefault(_vueComponents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var socket = io(location.href.replace('http', 'ws'), {
     transports: ['websocket']
@@ -109,21 +102,13 @@ var TW_ID = '600720083413962752';
 
 window.socket = socket;
 
-var ObserveTweet = function (_Tweet) {
-    _inherits(ObserveTweet, _Tweet);
-
-    function ObserveTweet() {
-        _classCallCheck(this, ObserveTweet);
-
-        return _possibleConstructorReturn(this, (ObserveTweet.__proto__ || Object.getPrototypeOf(ObserveTweet)).apply(this, arguments));
-    }
-
-    return ObserveTweet;
-}(_tweet2.default);
-
 (0, _vueComponents2.default)(_vue2.default);
 
-// 抽選の対象になるリツイーター一覧を取得する
+/**
+ * 抽選の対象になるリツイーター一覧を取得する
+ * @param  {[type]} id ツイート ID
+ * @return {[type]}    [description]
+ */
 function getLotteryTargetRetweeters(id) {
 
     var tweet = getTweet(id);
@@ -139,7 +124,7 @@ function getLotteryTargetRetweeters(id) {
     // フォロー or フォロワー がいないアカウントを除外
 
     retweeters = retweeters.filter(function (retweeter) {
-        return retweeter.friends_count > 0 && retweeter.followers_count > 0;
+        return retweeter.followCount > 0 && retweeter.followerCount > 0;
     });
 
     // FF 比をチェックする
@@ -151,7 +136,7 @@ function getLotteryTargetRetweeters(id) {
 
         retweeters = retweeters.filter(function (retweeter) {
 
-            var ratio = retweeter.followers_count / retweeter.friends_count;
+            var ratio = retweeter.ffRatio; //followers_count / retweeter.friends_count;
             return ratio >= border;
         });
     }
@@ -161,7 +146,7 @@ function getLotteryTargetRetweeters(id) {
         var _border = parseFloat(followerCountBorder);
         console.log('必須フォロワー数: ' + _border);
         retweeters = retweeters.filter(function (retweeter) {
-            return retweeter.followers_count >= _border;
+            return retweeter.followerCount >= _border;
         });
     }
 
@@ -171,19 +156,16 @@ function getLotteryTargetRetweeters(id) {
 // リツイーターから 1 ユーザーを抽選する
 function lottery(retweeters) {
 
-    var length = retweeters.length;
-
-    var retweeter = (0, _utils.shuffle)([].concat(_toConsumableArray(retweeters)))[(0, _utils.getRandomInt)(0, length)];
-
-    // if (!retweeter) return lottery();
-
-    return retweeter;
+    return (0, _utils.choice)(retweeters);
 }
 
 var lotteryResolver = null;
 var lotteryUserResolvers = {};
 
-// 抽選結果を反映する
+/**
+ * 抽選結果を反映する
+ * @param {[type]} users 当選者一覧
+ */
 async function setLotteryResult(users) {
 
     $('#lottery-dialog').modal();
@@ -205,9 +187,14 @@ async function setLotteryResult(users) {
             var el = document.querySelector('#lu' + user.id);
             el.innerHTML = '';
 
-            twttr.widgets.createTimeline(TW_ID, el, {
-                screenName: user.screenName
-            });
+            try {
+
+                twttr.widgets.createTimeline(TW_ID, el, {
+                    screenName: user.screenName
+                });
+            } catch (e) {
+                // 既にダイアログが閉じられている
+            }
         }
     } catch (err) {
         _didIteratorError = true;
@@ -234,8 +221,7 @@ async function $lottery(_ref, n) {
     var id = target.getAttribute('tweet-id');
 
     // 抽選対象
-    var retweeters = getLotteryTargetRetweeters(id);
-
+    var retweeters = void 0;
     // 全ての対象ツイートのリツイーターからランダムで選ぶ
     if (isMixed) {
         retweeters = [];
@@ -268,6 +254,9 @@ async function $lottery(_ref, n) {
         }
 
         console.log('全てのリツイーターから抽選します: ', retweeters);
+    } else {
+
+        retweeters = getLotteryTargetRetweeters(id);
     }
 
     console.log('抽選対象数: ', retweeters.length);
@@ -277,9 +266,12 @@ async function $lottery(_ref, n) {
     // 抽選回数 > 抽選対象者数 ならそのまま当選したことにする
     if (n > retweeters.length) {
 
-        var _users = retweeters.map(function (retweeter) {
-            return _user2.default.from(retweeter);
+        var _users = retweeters;
+
+        /*.map((retweeter) => {
+            return User.from(retweeter);
         });
+        */
 
         // 対象者たちをそのまま当選させる
         setLotteryResult(_users);
@@ -302,7 +294,7 @@ async function $lottery(_ref, n) {
             return id !== retweeter.id;
         });
 
-        var user = _user2.default.from(retweeter);
+        var user = retweeter; //User.from(retweeter);
 
         users.push(user);
 
@@ -373,6 +365,11 @@ app = new _vue2.default({
 
             socket.emit('spreadsheet', id);
         },
+
+
+        /**
+         * スプレッドシートを開く
+         */
         openSpreadsheet: function openSpreadsheet() {
 
             var tweetId = app.$data.modals.spreadsheet.targetTweetId;
@@ -381,6 +378,11 @@ app = new _vue2.default({
 
             window.open('https://docs.google.com/spreadsheets/d/' + id);
         },
+
+
+        /**
+         * 複数のツイートを対象に抽選する
+         */
         mixLottery: function mixLottery() {
             $lottery({
                 target: {
@@ -399,7 +401,7 @@ app = new _vue2.default({
     watch: {
         inputTime: function inputTime(value) {
 
-            var time = ('00000000000000' + value.substr(0, 14)).substr(-14);
+            var time = (0, _utils.zeroPad)(value, 14);
 
             var date = new Date((0, _utils.formatTime16)(time));
 
@@ -440,13 +442,7 @@ socket.on('ff-checked', function (count) {
 
 socket.on('spreadsheet', async function (ss) {
 
-    await new Promise(function (resolve) {
-        var id = setInterval(function () {
-            // ツイート情報が取得できたら resolve
-            if (getTweet(ss.id)) resolve();
-            clearInterval(id);
-        }, 100);
-    });
+    await waitTweetLoaded();
 
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
@@ -528,22 +524,37 @@ function getTweet(id) {
     })[0];
 }
 
+/**
+ * ツイートが読み込まれるまで待機する
+ * @param  {String}  id             ツイート ID
+ * @param  {Number}  [interval=100] [description]
+ * @return {Promise}                [description]
+ */
+function waitTweetLoaded(id) {
+    var interval = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
+
+    console.warn(this);
+    return new Promise(function (resolve) {
+        var clear = setInterval(function () {
+            // ツイート情報が取得できたら resolve
+            if (getTweet(id)) resolve();
+            clearInterval(clear);
+        }, interval);
+    });
+}
+
 socket.on('retweeters', async function (_ref4) {
     var id = _ref4.id,
         retweeters = _ref4.retweeters;
 
 
-    await new Promise(function (resolve) {
-        var c_id = setInterval(function () {
-            // ツイート情報が取得できたら resolve
-            if (getTweet(id)) resolve();
-            clearInterval(c_id);
-        }, 100);
-    });
+    await waitTweetLoaded(id);
 
     var tweet = getTweet(id);
 
-    tweet.retweeters = retweeters;
+    tweet.retweeters = retweeters.map(function (retweeter) {
+        return _user2.default.from(retweeter);
+    });
 });
 
 /*
@@ -563,72 +574,7 @@ socket.on('error', function (msg) {
 });
 
 /***/ }),
-
-/***/ 248:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.shuffle = shuffle;
-exports.getRandomInt = getRandomInt;
-exports.formatTime16 = formatTime16;
-var QueryString = exports.QueryString = {
-    parse: function parse(text, sep, eq) {
-        var isDecode = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
-
-        text = text || location.search.substr(1);
-        if (isDecode) text = decodeURIComponent(text);
-        sep = sep || '&';
-        eq = eq || '=';
-        return text.split(sep).reduce(function (obj, v) {
-            var pair = v.split(eq);
-            obj[pair[0]] = pair[1]; //decode(pair[1]);
-            return obj;
-        }, {});
-    },
-    stringify: function stringify(value, sep, eq, isEncode) {
-        sep = sep || '&';
-        eq = eq || '=';
-        var encode = isEncode ? encodeURIComponent : function (a) {
-            return a;
-        };
-        return Object.keys(value).map(function (key) {
-            return key + eq + encode(value[key]);
-        }).join(sep);
-    }
-};
-
-function shuffle(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var r = Math.floor(Math.random() * (i + 1));
-        var tmp = array[i];
-        array[i] = array[r];
-        array[r] = tmp;
-    }
-    return array;
-}
-
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-}
-
-function formatTime16(text) {
-    var format = '0123-45-67T89:ab:cd';
-    return format.split('').map(function (value) {
-        if (!value.match(/[0-9a-d]/)) return value;
-        return text[parseInt(value, 16)];
-    }).join('');
-}
-
-/***/ }),
-
-/***/ 251:
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9781,11 +9727,181 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   return Vue$3;
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports) {
 
-/***/ 253:
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.zeroPad = zeroPad;
+exports.choice = choice;
+exports.shuffle = shuffle;
+exports.getRandomInt = getRandomInt;
+exports.formatTime16 = formatTime16;
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var QueryString = exports.QueryString = {
+    parse: function parse(text, sep, eq) {
+        var isDecode = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+
+        text = text || location.search.substr(1);
+        if (isDecode) text = decodeURIComponent(text);
+        sep = sep || '&';
+        eq = eq || '=';
+        return text.split(sep).reduce(function (obj, v) {
+            var pair = v.split(eq);
+            obj[pair[0]] = pair[1]; //decode(pair[1]);
+            return obj;
+        }, {});
+    },
+    stringify: function stringify(value, sep, eq, isEncode) {
+        sep = sep || '&';
+        eq = eq || '=';
+        var encode = isEncode ? encodeURIComponent : function (a) {
+            return a;
+        };
+        return Object.keys(value).map(function (key) {
+            return key + eq + encode(value[key]);
+        }).join(sep);
+    }
+};
+
+function zeroPad(text, n) {
+    return ('0'.repeat(n) + text.substr(0, n)).substr(-n);
+}
+
+/**
+ * 配列からランダムに要素を 1 つチョイスする
+ * @param  {[type]} array [description]
+ * @return {[type]}       [description]
+ */
+function choice(array) {
+
+    var length = array.length;
+
+    var result = shuffle([].concat(_toConsumableArray(array)))[getRandomInt(0, length)];
+
+    if (!result) {
+        console.error('choice error');
+    }
+
+    return result;
+}
+
+function shuffle(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var r = Math.floor(Math.random() * (i + 1));
+        var tmp = array[i];
+        array[i] = array[r];
+        array[r] = tmp;
+    }
+    return array;
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function formatTime16(text) {
+    var format = '0123-45-67T89:ab:cd';
+    return format.split('').map(function (value) {
+        if (!value.match(/[0-9a-d]/)) return value;
+        return text[parseInt(value, 16)];
+    }).join('');
+}
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var User = function () {
+    function User() {
+        _classCallCheck(this, User);
+
+        this.name = '';
+        this.screenName = '';
+
+        this.followCount = 0;
+        this.followerCount = 0;
+    }
+
+    _createClass(User, [{
+        key: 'ffRatio',
+        get: function get() {
+            return this.followerCount / this.followCount;
+        }
+    }], [{
+        key: 'from',
+        value: function from(data) {
+
+            var user = new User();
+
+            user.id = data.id;
+            user.name = data.name;
+            user.screenName = data.screen_name;
+            user.followCount = data.friends_count;
+            user.followerCount = data.followers_count;
+
+            // user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
+
+            return user;
+        }
+    }]);
+
+    return User;
+}();
+
+exports.default = User;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9841,57 +9957,7 @@ var Tweet = function () {
 exports.default = Tweet;
 
 /***/ }),
-
-/***/ 254:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var User = function () {
-    function User() {
-        _classCallCheck(this, User);
-
-        this.name = '';
-        this.screenName = '';
-
-        this.followCount = 0;
-        this.followerCount = 0;
-    }
-
-    _createClass(User, null, [{
-        key: 'from',
-        value: function from(data) {
-
-            var user = new User();
-
-            user.id = data.id;
-            user.name = data.name;
-            user.screenName = data.screen_name;
-            user.followCount = data.friends_count;
-            user.followerCount = data.followers_count;
-            user.ffRatio = (user.followerCount / user.followCount).toFixed(2);
-
-            return user;
-        }
-    }]);
-
-    return User;
-}();
-
-exports.default = User;
-
-/***/ }),
-
-/***/ 255:
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9917,34 +9983,5 @@ function createVueComponents(Vue) {
     });
 };
 
-/***/ }),
-
-/***/ 3:
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
 /***/ })
-
-/******/ });
+/******/ ]);

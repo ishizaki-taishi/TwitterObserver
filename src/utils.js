@@ -22,6 +22,27 @@ export const QueryString = {
 
 
 
+export function zeroPad(text, n) {
+    return (('0').repeat(n) + text.substr(0, n)).substr(-n);
+}
+
+/**
+ * 配列からランダムに要素を 1 つチョイスする
+ * @param  {[type]} array [description]
+ * @return {[type]}       [description]
+ */
+export function choice(array) {
+
+    const length = array.length;
+
+    const result = shuffle([...array])[getRandomInt(0, length)];
+
+    if (!result) {
+        console.error('choice error');
+    }
+
+    return result;
+}
 
 
 export function shuffle(array) {

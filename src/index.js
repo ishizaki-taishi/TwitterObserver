@@ -9,11 +9,15 @@ let app = null;
 import Vue from './lib/vue';
 
 
+
 const TW_ID = '600720083413962752';
 
 window.socket = socket;
 
 import {
+
+    choice,
+    zeroPad,
     shuffle,
     getRandomInt,
     formatTime16
@@ -24,10 +28,6 @@ import User from './user';
 import Tweet from './tweet';
 
 
-class ObserveTweet extends Tweet {
-
-}
-
 import createVueComponents from './vue-components';
 
 createVueComponents(Vue);
@@ -35,7 +35,12 @@ createVueComponents(Vue);
 
 
 
-// 抽選の対象になるリツイーター一覧を取得する
+
+/**
+ * 抽選の対象になるリツイーター一覧を取得する
+ * @param  {[type]} id ツイート ID
+ * @return {[type]}    [description]
+ */
 function getLotteryTargetRetweeters(id) {
 
     const tweet = getTweet(id);
@@ -52,7 +57,7 @@ function getLotteryTargetRetweeters(id) {
 
     // フォロー or フォロワー がいないアカウントを除外
     retweeters = retweeters.filter((retweeter) => {
-        return retweeter.friends_count > 0 && retweeter.followers_count > 0;
+        return retweeter.followCount > 0 && retweeter.followerCount > 0;
     });
 
 
@@ -65,7 +70,7 @@ function getLotteryTargetRetweeters(id) {
 
         retweeters = retweeters.filter((retweeter) => {
 
-            const ratio = retweeter.followers_count / retweeter.friends_count;
+            const ratio = retweeter.ffRatio; //followers_count / retweeter.friends_count;
             return (ratio >= border);
 
         });
@@ -77,7 +82,7 @@ function getLotteryTargetRetweeters(id) {
         const border = parseFloat(followerCountBorder);
         console.log('必須フォロワー数: ' + border);
         retweeters = retweeters.filter((retweeter) => {
-            return (retweeter.followers_count >= border);
+            return (retweeter.followerCount >= border);
         });
     }
 
@@ -90,20 +95,19 @@ function getLotteryTargetRetweeters(id) {
 // リツイーターから 1 ユーザーを抽選する
 function lottery(retweeters) {
 
-    const length = retweeters.length;
+    return choice(retweeters);
 
-    const retweeter = shuffle([...retweeters])[getRandomInt(0, length)];
-
-    // if (!retweeter) return lottery();
-
-    return retweeter;
 }
 
 
 let lotteryResolver = null;
 const lotteryUserResolvers = {};
 
-// 抽選結果を反映する
+
+/**
+ * 抽選結果を反映する
+ * @param {[type]} users 当選者一覧
+ */
 async function setLotteryResult(users) {
 
     $('#lottery-dialog').modal();
@@ -118,9 +122,15 @@ async function setLotteryResult(users) {
         const el = document.querySelector(`#lu${user.id}`);
         el.innerHTML = '';
 
-        twttr.widgets.createTimeline(TW_ID, el, {
-            screenName: user.screenName
-        });
+        try {
+
+            twttr.widgets.createTimeline(TW_ID, el, {
+                screenName: user.screenName
+            });
+
+        } catch (e) {
+            // 既にダイアログが閉じられている
+        }
 
     }
 
@@ -133,8 +143,7 @@ async function $lottery({ target }, n, isMixed = false) {
     const id = target.getAttribute('tweet-id');
 
     // 抽選対象
-    let retweeters = getLotteryTargetRetweeters(id);
-
+    let retweeters;
     // 全ての対象ツイートのリツイーターからランダムで選ぶ
     if (isMixed) {
         retweeters = [];
@@ -143,6 +152,14 @@ async function $lottery({ target }, n, isMixed = false) {
         }
         //
         console.log('全てのリツイーターから抽選します: ', retweeters);
+
+
+
+
+    } else {
+
+        retweeters = getLotteryTargetRetweeters(id);
+
     }
 
 
@@ -155,9 +172,12 @@ async function $lottery({ target }, n, isMixed = false) {
     // 抽選回数 > 抽選対象者数 ならそのまま当選したことにする
     if (n > retweeters.length) {
 
-        const users = retweeters.map((retweeter) => {
+        const users = retweeters;
+
+        /*.map((retweeter) => {
             return User.from(retweeter);
         });
+        */
 
         // 対象者たちをそのまま当選させる
         setLotteryResult(users);
@@ -178,7 +198,7 @@ async function $lottery({ target }, n, isMixed = false) {
         // 対象者一覧から除外
         retweeters = retweeters.filter(({ id }) => id !== retweeter.id);
 
-        const user = User.from(retweeter);
+        const user = retweeter; //User.from(retweeter);
 
         users.push(user);
 
@@ -250,6 +270,9 @@ app = new Vue({
             socket.emit('spreadsheet', id);
         },
 
+        /**
+         * スプレッドシートを開く
+         */
         openSpreadsheet() {
 
             const tweetId = app.$data.modals.spreadsheet.targetTweetId;
@@ -260,6 +283,9 @@ app = new Vue({
 
         },
 
+        /**
+         * 複数のツイートを対象に抽選する
+         */
         mixLottery() {
             $lottery({
                 target: {
@@ -269,7 +295,6 @@ app = new Vue({
                 }
             }, 5, true);
         },
-
 
         openLotteryDialog10(e) {
             $lottery(e, 10);
@@ -286,7 +311,7 @@ app = new Vue({
 
         inputTime(value) {
 
-            const time = ('00000000000000' + value.substr(0, 14)).substr(-14);
+            const time = zeroPad(value, 14);
 
             const date = new Date(formatTime16(time));
 
@@ -341,13 +366,7 @@ socket.on('ff-checked', (count) => {
 socket.on('spreadsheet', async(ss) => {
 
 
-    await new Promise((resolve) => {
-        const id = setInterval(() => {
-            // ツイート情報が取得できたら resolve
-            if (getTweet(ss.id)) resolve();
-            clearInterval(id);
-        }, 100);
-    });
+    await waitTweetLoaded();
 
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
@@ -402,21 +421,34 @@ function getTweet(id) {
 }
 
 
-socket.on('retweeters', async({ id, retweeters }) => {
-
-
-
-    await new Promise((resolve) => {
-        const c_id = setInterval(() => {
+/**
+ * ツイートが読み込まれるまで待機する
+ * @param  {String}  id             ツイート ID
+ * @param  {Number}  [interval=100] [description]
+ * @return {Promise}                [description]
+ */
+function waitTweetLoaded(id, interval = 100) {
+    console.warn(this);
+    return new Promise((resolve) => {
+        const clear = setInterval(() => {
             // ツイート情報が取得できたら resolve
             if (getTweet(id)) resolve();
-            clearInterval(c_id);
-        }, 100);
+            clearInterval(clear);
+        }, interval);
     });
+}
+
+
+socket.on('retweeters', async({ id, retweeters }) => {
+
+    await waitTweetLoaded(id);
 
     const tweet = getTweet(id);
 
-    tweet.retweeters = retweeters;
+    tweet.retweeters = retweeters.map((retweeter) => {
+        return User.from(retweeter);
+    });
+
 
 });
 
