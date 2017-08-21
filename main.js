@@ -88,6 +88,9 @@ function query(query) {
 
 
 
+
+
+
 function dbQuery(query) {
     return new Promise((resolve) => {
         dbClient.query(query, (error, response) => {

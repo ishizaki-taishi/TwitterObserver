@@ -16,6 +16,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+    <script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.full.min.js"></script>
+
+
     <link rel="stylesheet" href="style.css">
 
     <!--
@@ -53,6 +57,11 @@
                 <slot></slot>
             </button>
         </div>
+    </script>
+
+
+    <script type="text/x-template" id="graph-template">
+        <canvas :tweet-id="twid">{{twid}}</canvas>
     </script>
 
     <script src="app.js" charset="utf-8" defer></script>
@@ -100,8 +109,11 @@
         <div class="bd-pageheader" style="color: #358; background: #f0f9ff; border-bottom: solid 1px #cdf;">
             <app-container>
                 <h2 style="margin: 1rem;">
+
+                    <app-icon fa="eye"></app-icon>Watch: {{ tweets.length }}
+                    <app-space></app-space>
                     <app-icon fa="database"></app-icon>Rows: {{ databaseCapacity.count }} of {{ databaseCapacity.max }}
-                    <span style="opacity:0">_</span>
+                    <app-space></app-space>
                     <app-icon fa="users"></app-icon>FF: {{ ff.checkedCount }} of {{ databaseCapacity.count }}
                 </h2>
             </app-container>
@@ -115,7 +127,7 @@
 
                 <div class="left col-12 col-md-4">
 
-                    <h2 style="word-break: break-all;"><app-icon fa="twitter"></app-icon>{{ tweet.id }}</h2>
+                    <h2 style="color:#358;word-break: break-all;"><app-icon fa="twitter"></app-icon>{{ tweet.id }}</h2>
 
                     <hr>
 
@@ -164,12 +176,12 @@
                             </div>
 
 
+
                             <div class="form-inline" style="display: inline-block">
                                 <input disabled type="number" maxlength="14" v-model="inputTime" placeholder="until time" class="form-control">
                             </div>
 
                             <span>{{ tweet.view.time }}</span>
-
 
 
 
@@ -188,7 +200,7 @@
 
                 <div class="col-12 col-md-8">
 
-                    <h2><app-icon fa="retweet"></app-icon>Retweeters: {{ tweet.retweeters.length }}</h2>
+                    <h2 style="color:#358"><app-icon fa="retweet"></app-icon>Retweeters: {{ tweet.retweeters.length }}</h2>
 
                     <div id="log" style="max-height: 50vh; overflow: scroll;">
 
@@ -196,11 +208,12 @@
                             Loading...
                         </div>
                         <div v-else v-for="retweeter in tweet.retweeters">
-                            {{ retweeter.name }} <span style="color:#437BD7">@{{retweeter.screen_name}}</span>
+                            {{ retweeter.name }} <span style="color:#437BD7">@{{retweeter.screenName}}</span>
                         </div>
 
-
                     </div>
+
+                    <app-graph :twid="tweet.id"></app-graph>
 
 
                 </div>
@@ -275,7 +288,7 @@
 
 
 
-                        <div v-for="user in lottery.users">
+                        <div v-for="user in lottery.users" class="shadow-box" style="padding: 1rem; margin-bottom: 1rem;">
 
 
                             <h2>{{ user.name }} <span style="color:666;">@{{ user.screenName }}</span></h2>
@@ -284,7 +297,7 @@
 
                             <div :id="'lu' + user.id"></div>
 
-                            <hr />
+
 
                         </div>
 
@@ -301,7 +314,14 @@
         <br>
         <br>
 
-        <footer class="footer">
+        <footer class="footer" style="
+
+        color: rgb(51, 85, 136);
+        background: rgb(240, 249, 255);
+        border-top: 1px solid rgb(204, 221, 255);
+
+        ">
+
             <div class="container">
                 <div class="row">
                     footer
