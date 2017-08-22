@@ -539,10 +539,12 @@ function getTweet(id) {
 function waitTweetLoaded(id) {
     var interval = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
 
-    console.warn(this);
+    console.warn(id);
     return new Promise(function (resolve) {
         var clear = setInterval(function () {
             // ツイート情報が取得できたら resolve
+            console.warn('resolve', id);
+
             if (getTweet(id)) resolve();
             clearInterval(clear);
         }, interval);
