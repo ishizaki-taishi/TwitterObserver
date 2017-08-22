@@ -450,6 +450,8 @@ socket.on('spreadsheet', async function (ss) {
 
     await waitTweetLoaded(ss.id);
 
+    console.log('spreadsheet の情報を反映します', ss.spreadsheet_id);
+
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
 });
