@@ -27,6 +27,9 @@ class Spreadsheet {
 
         if (Spreadsheet.auth) return;
 
+        console.log('CLIENT_SECRET: ', process.env.CLIENT_SECRET);
+        console.log('CREDENTIALS: ', process.env.CREDENTIALS);
+
         let cs = '';
 
         // heroku
