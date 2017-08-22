@@ -66,6 +66,8 @@ class Spreadsheet {
 
         Spreadsheet.auth = client;
 
+        console.log('Auth', auth);
+
     }
 
     /**
