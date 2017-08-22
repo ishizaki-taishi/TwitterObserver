@@ -121,7 +121,7 @@ function getObserveTweetIds() {
 
 
 
-const { create, update } = require('./spreadsheet');
+const Spreadsheet = require('./spreadsheet');
 
 // リツイート情報をスプレッドシートに反映する
 async function writeSpreadsheet(id) {
@@ -132,7 +132,7 @@ async function writeSpreadsheet(id) {
 
     const retweeters = (await query(`SELECT * FROM retweeters WHERE target_id = '${id}'`)).response.rows;
 
-    const result = await update(spreadsheet_id, retweeters, io);
+    const result = await Spreadsheet.update(spreadsheet_id, retweeters, io);
 
     console.log('スプレッドシートに書き込みました', result);
 
@@ -156,7 +156,7 @@ async function updateObserveTweets() {
             console.log('スプレッドシートが生成されていません: ', row.id);
 
             // スプレッドシートを作成して DB に登録する
-            const { spreadsheetId } = await create();
+            const { spreadsheetId } = await Spreadsheet.create();
 
             await query(`UPDATE observe_tweets SET spreadsheet_id = '${spreadsheetId}' WHERE id = '${row.id}'`);
 
@@ -411,32 +411,6 @@ io.sockets.on('connection', async(socket) => {
 
         });
 
-    });
-
-
-
-    socket.on('lottery-oembed', async(screenName) => {
-
-        const res = await get('search/tweets', {
-            q: 'from:tantoraDREAM filter:retweets @dabisto_jp ダビストティザー公開記念キャンペーン', //`from:${screenName}`,
-            count: 1
-        });
-
-
-        console.log('抽選結果の oembed を取得します: ', res.statuses[0].retweeted_status);
-        /*
-         */
-        // console.log('oembed を取得しました: ', html);
-
-        // const id = res.statuses[0].id_str;
-        const id = res.statuses[0].retweeted_status.id_str;
-
-
-        const { html } = await get('statuses/oembed', {
-            url: `https://twitter.com/_/status/${id}`
-        });
-
-        io.emit('lottery-oembed', html);
     });
 
 
