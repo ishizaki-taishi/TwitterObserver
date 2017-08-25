@@ -11,7 +11,6 @@ app.use(express.static('public'));
 app.use(express.static('dist'));
 
 
-
 process.on('unhandledRejection', console.dir);
 
 
@@ -48,15 +47,6 @@ function pgFormatDate(date) {
     var parsed = new Date(date)
     return [parsed.getUTCFullYear(), zeroPad(parsed.getMonth() + 1), zeroPad(parsed.getDate()), zeroPad(parsed.getHours()), zeroPad(parsed.getMinutes()), zeroPad(parsed.getSeconds())].join(" ");
 }
-
-
-const Twitter = require('twitter');
-const client = new Twitter({
-    consumer_key: 'KBARD1nq3jV1rrxPg9eHAvavo',
-    consumer_secret: 'HeCtqZag01SZmbbbIV7WWX0glX44RqGCtBa28qMMnSWecKarIL',
-    access_token_key: '294436176-0esY5xOKLsmaGolQ1F6P5G2nGpdgrlzsvmnXteHC',
-    access_token_secret: 'KlpgzZcHsx9ciOu9fDxCuBrUqmE3LtlVJ0ML6E8rnkxj9'
-});
 
 console.log('init');
 
@@ -443,17 +433,10 @@ io.sockets.on('connection', async(socket) => {
 
 });
 
-function get(api, params) {
-    return new Promise((resolve, reject) => {
-        client.get(api, params, (e, t, r) => {
-            if (e) {
-                console.error(e);
-                reject(e);
-            }
-            resolve(t);
-        });
-    });
-}
+const Twitter = require('./twitter');
+const get = Twitter.get;
+
+
 
 
 app.get('/', async(req, res) => {
