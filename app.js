@@ -166,7 +166,6 @@ async function updateObserveTweets() {
 
     }
 
-
     observeTweets = response.rows.map((row) => row.id);
 
 }

@@ -375,6 +375,7 @@ socket.on('spreadsheet', async(ss) => {
 
     await waitTweetLoaded(ss.id);
 
+    console.log('spreadsheet の情報を反映します', ss.spreadsheet_id);
 
     // スプレッドシートの情報を入れる
     getTweet(ss.id).spreadsheetId = ss.spreadsheet_id;
@@ -436,10 +437,12 @@ function getTweet(id) {
  * @return {Promise}                [description]
  */
 function waitTweetLoaded(id, interval = 100) {
-    console.warn(this);
+    console.warn(id);
     return new Promise((resolve) => {
         const clear = setInterval(() => {
             // ツイート情報が取得できたら resolve
+                 console.warn('resolve', id);
+
             if (getTweet(id)) resolve();
             clearInterval(clear);
         }, interval);

@@ -1,11 +1,17 @@
 const path = require('path');
+const webpack = require('webpack');
+
+console.log('WEBPACK');
 
 module.exports = {
 
     context: path.resolve(__dirname, 'src'),
 
     entry: {
-        app: './index.js'
+        app: [
+            'babel-polyfill',
+            './index.js'
+        ]
     },
 
     output: {
@@ -13,12 +19,26 @@ module.exports = {
         filename: '[name].js'
     },
 
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin({
+            include: /src/
+        })
+    ],
+
     module: {
         loaders: [{
             test: /\.js$/,
-            exclude: /node_modules/,
-            loader: "babel-loader"
+            include: [
+                /src/,
+            ],
+            exclude: [
+                /node_modules/,
+                /lib/
+            ],
+            loader: 'babel-loader'
         }]
     },
+
     target: 'web'
+
 };
