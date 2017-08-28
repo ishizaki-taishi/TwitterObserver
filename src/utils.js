@@ -1,5 +1,10 @@
 export const QueryString = {
     parse(text, sep, eq, isDecode = true) {
+
+        if (!text) return null;
+
+        if (text.startsWidth('?')) text = text.substr(1);
+
         text = text || location.search.substr(1);
         if (isDecode) text = decodeURIComponent(text);
         sep = sep || '&';

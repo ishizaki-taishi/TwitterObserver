@@ -27,10 +27,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.common.js" charset="utf-8"></script>
     -->
 
+    <!-- app-icon -->
     <script type="text/x-template" id="icon-template">
         <i :class="'fa fa-' + fa" aria-hidden="true" style="margin-right: 1rem"></i>
     </script>
 
+    <!-- app-container -->
     <script type="text/x-template" id="container-template">
         <div class="container">
             <div class="row">
@@ -39,16 +41,10 @@
         </div>
     </script>
 
-
+    <!-- app-space -->
     <script type="text/x-template" id="space-template">
         <span style="opacity: 0">_</span>
     </script>
-
-
-    <script type="text/x-template" id="rb">
-
-    </script>
-
 
 
     <script type="text/x-template" id="b-template">
@@ -119,6 +115,34 @@
             </app-container>
         </div>
 
+
+        <!-- HashTag Search -->
+        <div id="hashtag">
+            <div class="container" style="margin-top:1rem">
+                <div class="row shadow-box" style="padding:1rem">
+
+                    <div class="input-group">
+                        <span class="input-group-addon">#</span>
+                        <input type="text" class="form-control" placeholder="ハッシュタグ" v-model="search.hashtag" @keydown.enter="searchHashtag">
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button" @click="searchHashtag">検索</button>
+                        </span>
+                    </div>
+
+                    <div v-if="search.results.length">
+                        <hr>
+                        <h3>取得数: {{ search.results.length }}</h3>
+                        <hr>
+                        <div v-for="result in search.results">
+                            <span style="font-weight:bold">{{ result.status.data.user.name }} @{{ result.status.data.user.screen_name }}</span>
+                            <br>{{ new Date(result.status.data.created_at).toLocaleString() }}
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
 
 
         <div class="container" v-for="tweet in tweets">

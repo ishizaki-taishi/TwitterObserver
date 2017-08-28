@@ -9318,11 +9318,11 @@ var $lottery = function () {
     };
 }();
 
-var _vue = __webpack_require__(331);
+var _utils = __webpack_require__(331);
+
+var _vue = __webpack_require__(332);
 
 var _vue2 = _interopRequireDefault(_vue);
-
-var _utils = __webpack_require__(332);
 
 var _user = __webpack_require__(333);
 
@@ -9342,15 +9342,21 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
+// WebSocket
 var socket = io(location.href.replace('http', 'ws'), {
     transports: ['websocket']
 });
+
+window.socket = socket;
+
+// utils
+
 
 var app = null;
 
 var TW_ID = '600720083413962752';
 
-window.socket = socket;
+// vuejs のコンポーネントを登録する
 
 (0, _vueComponents2.default)(_vue2.default);
 
@@ -9403,9 +9409,33 @@ function getLotteryTargetRetweeters(id) {
     return retweeters;
 }
 
+/**
+ * WebSocket でリクエストを送り結果を受け取る
+ * @param  {[type]} name WebSocket のイベント名
+ * @param  {[type]} args 引数
+ */
+function request(name) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+    }
+
+    // 既に登録されていたリスナーを削除する
+    socket.off(name);
+
+    return new Promise(function (resolve) {
+
+        // 結果を受け取ったら resolve
+        socket.on(name, function () {
+
+            resolve.apply(undefined, arguments);
+        });
+
+        socket.emit.apply(socket, [name].concat(args));
+    });
+}
+
 // リツイーターから 1 ユーザーを抽選する
 function lottery(retweeters) {
-
     return (0, _utils.choice)(retweeters);
 }
 
@@ -9446,19 +9476,75 @@ app = new _vue2.default({
         },
 
         inputTime: '',
-        time: null
+        time: null,
+
+        // 検索
+        search: {
+            // 検索に使用するハッシュタグ
+            hashtag: '勝つのは3番',
+            // 検索結果
+            results: []
+        }
 
     },
 
     methods: {
+        searchHashtag: function () {
+            var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+                var hashtag, results;
+                return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                    while (1) {
+                        switch (_context3.prev = _context3.next) {
+                            case 0:
+                                hashtag = app.$data.search.hashtag;
+
+                                if (hashtag) {
+                                    _context3.next = 3;
+                                    break;
+                                }
+
+                                return _context3.abrupt('return', console.warn('ハッシュタグが入力されていません'));
+
+                            case 3:
+
+                                // 以前の検索結果を削除する
+                                app.$data.search.results = [];
+
+                                console.log('ハッシュタグで検索します', hashtag);
+
+                                _context3.next = 7;
+                                return request('search-hashtag', hashtag);
+
+                            case 7:
+                                results = _context3.sent;
+
+
+                                app.$data.search.results = results;
+
+                                console.log(results);
+
+                            case 10:
+                            case 'end':
+                                return _context3.stop();
+                        }
+                    }
+                }, _callee3, this);
+            }));
+
+            function searchHashtag() {
+                return _ref5.apply(this, arguments);
+            }
+
+            return searchHashtag;
+        }(),
         toggleOptions: function toggleOptions() {
             // this.view
         },
 
 
         // スプレッドシートに書き込む
-        writeSpreadsheet: function writeSpreadsheet(_ref5) {
-            var target = _ref5.target;
+        writeSpreadsheet: function writeSpreadsheet(_ref6) {
+            var target = _ref6.target;
 
 
             var id = target.getAttribute('tweet-id');
@@ -9544,19 +9630,20 @@ socket.on('error', function () {
 
 var _spreadsheet_id = null;
 
+// FF 情報を受け取る
 socket.on('ff-checked', function (count) {
     app.$data.ff.checkedCount = count;
 });
 
 socket.on('spreadsheet', function () {
-    var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(ss) {
-        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+    var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(ss) {
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
-                switch (_context3.prev = _context3.next) {
+                switch (_context4.prev = _context4.next) {
                     case 0:
                         console.log('spreadsheet の情報を取得しました', ss);
 
-                        _context3.next = 3;
+                        _context4.next = 3;
                         return waitTweetLoaded(ss.id);
 
                     case 3:
@@ -9568,29 +9655,30 @@ socket.on('spreadsheet', function () {
 
                     case 5:
                     case 'end':
-                        return _context3.stop();
+                        return _context4.stop();
                 }
             }
-        }, _callee3, undefined);
+        }, _callee4, undefined);
     }));
 
     return function (_x5) {
-        return _ref6.apply(this, arguments);
+        return _ref7.apply(this, arguments);
     };
 }());
 
+// 監視対象ツイートを受け取る
 socket.on('observe-tweets', function () {
-    var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(tweets) {
+    var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(tweets) {
         var _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, tweet;
 
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
-                switch (_context4.prev = _context4.next) {
+                switch (_context5.prev = _context5.next) {
                     case 0:
                         _iteratorNormalCompletion3 = true;
                         _didIteratorError3 = false;
                         _iteratorError3 = undefined;
-                        _context4.prev = 3;
+                        _context5.prev = 3;
 
 
                         for (_iterator3 = tweets[Symbol.iterator](); !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
@@ -9600,59 +9688,60 @@ socket.on('observe-tweets', function () {
                             app.$data.tweets.push(_tweet2.default.from(tweet));
                         }
 
-                        _context4.next = 11;
+                        // ビューに反映されるまで待機
+                        _context5.next = 11;
                         break;
 
                     case 7:
-                        _context4.prev = 7;
-                        _context4.t0 = _context4['catch'](3);
+                        _context5.prev = 7;
+                        _context5.t0 = _context5['catch'](3);
                         _didIteratorError3 = true;
-                        _iteratorError3 = _context4.t0;
+                        _iteratorError3 = _context5.t0;
 
                     case 11:
-                        _context4.prev = 11;
-                        _context4.prev = 12;
+                        _context5.prev = 11;
+                        _context5.prev = 12;
 
                         if (!_iteratorNormalCompletion3 && _iterator3.return) {
                             _iterator3.return();
                         }
 
                     case 14:
-                        _context4.prev = 14;
+                        _context5.prev = 14;
 
                         if (!_didIteratorError3) {
-                            _context4.next = 17;
+                            _context5.next = 17;
                             break;
                         }
 
                         throw _iteratorError3;
 
                     case 17:
-                        return _context4.finish(14);
+                        return _context5.finish(14);
 
                     case 18:
-                        return _context4.finish(11);
+                        return _context5.finish(11);
 
                     case 19:
-                        _context4.next = 21;
+                        _context5.next = 21;
                         return _vue2.default.nextTick();
 
                     case 21:
-
+                        // twitter 埋め込みを生成する
                         updateOembeds();
 
                         console.log('Tweets', tweets);
 
                     case 23:
                     case 'end':
-                        return _context4.stop();
+                        return _context5.stop();
                 }
             }
-        }, _callee4, undefined, [[3, 7, 11, 19], [12,, 14, 18]]);
+        }, _callee5, undefined, [[3, 7, 11, 19], [12,, 14, 18]]);
     }));
 
     return function (_x6) {
-        return _ref7.apply(this, arguments);
+        return _ref8.apply(this, arguments);
     };
 }());
 
@@ -9719,15 +9808,15 @@ function waitTweetLoaded(id) {
 }
 
 socket.on('retweeters', function () {
-    var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(_ref8) {
-        var id = _ref8.id,
-            retweeters = _ref8.retweeters;
+    var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(_ref9) {
+        var id = _ref9.id,
+            retweeters = _ref9.retweeters;
         var tweet;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
             while (1) {
-                switch (_context5.prev = _context5.next) {
+                switch (_context6.prev = _context6.next) {
                     case 0:
-                        _context5.next = 2;
+                        _context6.next = 2;
                         return waitTweetLoaded(id);
 
                     case 2:
@@ -9740,14 +9829,14 @@ socket.on('retweeters', function () {
 
                     case 4:
                     case 'end':
-                        return _context5.stop();
+                        return _context6.stop();
                 }
             }
-        }, _callee5, undefined);
+        }, _callee6, undefined);
     }));
 
     return function (_x8) {
-        return _ref9.apply(this, arguments);
+        return _ref10.apply(this, arguments);
     };
 }());
 
@@ -9769,6 +9858,101 @@ socket.on('error', function (msg) {
 
 /***/ }),
 /* 331 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.zeroPad = zeroPad;
+exports.choice = choice;
+exports.shuffle = shuffle;
+exports.getRandomInt = getRandomInt;
+exports.formatTime16 = formatTime16;
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var QueryString = exports.QueryString = {
+    parse: function parse(text, sep, eq) {
+        var isDecode = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+
+
+        if (!text) return null;
+
+        if (text.startsWidth('?')) text = text.substr(1);
+
+        text = text || location.search.substr(1);
+        if (isDecode) text = decodeURIComponent(text);
+        sep = sep || '&';
+        eq = eq || '=';
+        return text.split(sep).reduce(function (obj, v) {
+            var pair = v.split(eq);
+            obj[pair[0]] = pair[1]; //decode(pair[1]);
+            return obj;
+        }, {});
+    },
+    stringify: function stringify(value, sep, eq, isEncode) {
+        sep = sep || '&';
+        eq = eq || '=';
+        var encode = isEncode ? encodeURIComponent : function (a) {
+            return a;
+        };
+        return Object.keys(value).map(function (key) {
+            return key + eq + encode(value[key]);
+        }).join(sep);
+    }
+};
+
+function zeroPad(text, n) {
+    return ('0'.repeat(n) + text.substr(0, n)).substr(-n);
+}
+
+/**
+ * 配列からランダムに要素を 1 つチョイスする
+ * @param  {[type]} array [description]
+ * @return {[type]}       [description]
+ */
+function choice(array) {
+
+    var length = array.length;
+
+    var result = shuffle([].concat(_toConsumableArray(array)))[getRandomInt(0, length)];
+
+    if (!result) {
+        console.error('choice error');
+    }
+
+    return result;
+}
+
+function shuffle(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var r = Math.floor(Math.random() * (i + 1));
+        var tmp = array[i];
+        array[i] = array[r];
+        array[r] = tmp;
+    }
+    return array;
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
+
+function formatTime16(text) {
+    var format = '0123-45-67T89:ab:cd';
+    return format.split('').map(function (value) {
+        if (!value.match(/[0-9a-d]/)) return value;
+        return text[parseInt(value, 16)];
+    }).join('');
+}
+
+/***/ }),
+/* 332 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -19830,96 +20014,6 @@ return Vue$3;
 })));
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(64)))
-
-/***/ }),
-/* 332 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.zeroPad = zeroPad;
-exports.choice = choice;
-exports.shuffle = shuffle;
-exports.getRandomInt = getRandomInt;
-exports.formatTime16 = formatTime16;
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-var QueryString = exports.QueryString = {
-    parse: function parse(text, sep, eq) {
-        var isDecode = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
-
-        text = text || location.search.substr(1);
-        if (isDecode) text = decodeURIComponent(text);
-        sep = sep || '&';
-        eq = eq || '=';
-        return text.split(sep).reduce(function (obj, v) {
-            var pair = v.split(eq);
-            obj[pair[0]] = pair[1]; //decode(pair[1]);
-            return obj;
-        }, {});
-    },
-    stringify: function stringify(value, sep, eq, isEncode) {
-        sep = sep || '&';
-        eq = eq || '=';
-        var encode = isEncode ? encodeURIComponent : function (a) {
-            return a;
-        };
-        return Object.keys(value).map(function (key) {
-            return key + eq + encode(value[key]);
-        }).join(sep);
-    }
-};
-
-function zeroPad(text, n) {
-    return ('0'.repeat(n) + text.substr(0, n)).substr(-n);
-}
-
-/**
- * 配列からランダムに要素を 1 つチョイスする
- * @param  {[type]} array [description]
- * @return {[type]}       [description]
- */
-function choice(array) {
-
-    var length = array.length;
-
-    var result = shuffle([].concat(_toConsumableArray(array)))[getRandomInt(0, length)];
-
-    if (!result) {
-        console.error('choice error');
-    }
-
-    return result;
-}
-
-function shuffle(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var r = Math.floor(Math.random() * (i + 1));
-        var tmp = array[i];
-        array[i] = array[r];
-        array[r] = tmp;
-    }
-    return array;
-}
-
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
-}
-
-function formatTime16(text) {
-    var format = '0123-45-67T89:ab:cd';
-    return format.split('').map(function (value) {
-        if (!value.match(/[0-9a-d]/)) return value;
-        return text[parseInt(value, 16)];
-    }).join('');
-}
 
 /***/ }),
 /* 333 */

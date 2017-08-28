@@ -1,21 +1,13 @@
+// WebSocket
 const socket = io(location.href.replace('http', 'ws'), {
     transports: ['websocket']
 });
 
-
-let app = null;
-
-
-import Vue from './lib/vue';
-
-
-
-const TW_ID = '600720083413962752';
-
 window.socket = socket;
 
-import {
 
+// utils
+import {
     choice,
     zeroPad,
     shuffle,
@@ -24,12 +16,24 @@ import {
 } from './utils';
 
 
+
+
+let app = null;
+
+
+import Vue from './lib/vue';
+
+const TW_ID = '600720083413962752';
+
+
+
+
 import User from './user';
 import Tweet from './tweet';
 
 
+// vuejs のコンポーネントを登録する
 import createVueComponents from './vue-components';
-
 createVueComponents(Vue);
 
 
@@ -92,11 +96,35 @@ function getLotteryTargetRetweeters(id) {
 
 
 
+/**
+ * WebSocket でリクエストを送り結果を受け取る
+ * @param  {[type]} name WebSocket のイベント名
+ * @param  {[type]} args 引数
+ */
+function request(name, ...args) {
+
+    // 既に登録されていたリスナーを削除する
+    socket.off(name);
+
+    return new Promise((resolve) => {
+
+        // 結果を受け取ったら resolve
+        socket.on(name, (...args) => {
+
+            resolve(...args);
+
+        });
+
+        socket.emit(name, ...args);
+
+    });
+}
+
+
+
 // リツイーターから 1 ユーザーを抽選する
 function lottery(retweeters) {
-
     return choice(retweeters);
-
 }
 
 
@@ -153,16 +181,11 @@ async function $lottery({ target }, n, isMixed = false) {
         //
         console.log('全てのリツイーターから抽選します: ', retweeters);
 
-
-
-
     } else {
 
         retweeters = getLotteryTargetRetweeters(id);
 
     }
-
-
 
 
     console.log('抽選対象数: ', retweeters.length);
@@ -251,11 +274,44 @@ app = new Vue({
         inputTime: '',
         time: null,
 
+
+        // 検索
+        search: {
+            // 検索に使用するハッシュタグ
+            hashtag: '勝つのは3番',
+            // 検索結果
+            results: []
+        }
+
     },
 
 
 
     methods: {
+
+        async searchHashtag() {
+
+
+            const hashtag = app.$data.search.hashtag;
+
+            if (!hashtag) {
+                return console.warn('ハッシュタグが入力されていません');
+            }
+
+            // 以前の検索結果を削除する
+            app.$data.search.results = [];
+
+
+            console.log('ハッシュタグで検索します', hashtag);
+
+            const results = await request('search-hashtag', hashtag);
+
+            app.$data.search.results = results;
+
+
+            console.log(results);
+
+        },
 
         toggleOptions() {
             // this.view
@@ -366,9 +422,11 @@ socket.on('error', (...args) => {
 let _spreadsheet_id = null;
 
 
+// FF 情報を受け取る
 socket.on('ff-checked', (count) => {
     app.$data.ff.checkedCount = count;
 });
+
 
 socket.on('spreadsheet', async(ss) => {
     console.log('spreadsheet の情報を取得しました', ss);
@@ -384,7 +442,7 @@ socket.on('spreadsheet', async(ss) => {
 
 
 
-
+// 監視対象ツイートを受け取る
 socket.on('observe-tweets', async(tweets) => {
 
 
@@ -395,8 +453,9 @@ socket.on('observe-tweets', async(tweets) => {
     }
 
 
+    // ビューに反映されるまで待機
     await Vue.nextTick();
-
+    // twitter 埋め込みを生成する
     updateOembeds();
 
     console.log('Tweets', tweets);
@@ -441,7 +500,7 @@ function waitTweetLoaded(id, interval = 100) {
     return new Promise((resolve) => {
         const clear = setInterval(() => {
             // ツイート情報が取得できたら resolve
-                 console.warn('resolve', id);
+            console.warn('resolve', id);
 
             if (getTweet(id)) resolve();
             clearInterval(clear);

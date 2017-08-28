@@ -14,6 +14,10 @@ app.use(express.static('dist'));
 process.on('unhandledRejection', console.dir);
 
 
+const Twitter = require('./twitter');
+const get = Twitter.get;
+
+
 const DATABASE_CAPACITY = 10000;
 
 
@@ -290,12 +294,7 @@ setInterval(fetchUserStatus, 3000 * 2);
 
 
 class DB {
-
-    constructor() {
-
-    }
-
-
+    constructor() {}
 }
 
 
@@ -390,6 +389,25 @@ io.sockets.on('connection', async(socket) => {
 
 
 
+    socket.on('search-hashtag', async(hashtag) => {
+
+        console.log('ハッシュタグで検索します', hashtag);
+
+        const response = await Twitter.$search(`#${hashtag}`, {
+
+            count: 100,
+
+            result_type: 'recent',
+
+            trim_user: false
+
+        });
+
+        io.emit('search-hashtag', response);
+
+    });
+
+
     socket.on('add-target-tweet', (id) => {
 
         dbClient.query(`INSERT INTO observe_tweets (id) VALUES ('${id}')`, (err, res) => {
@@ -428,14 +446,7 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
-
-
-
 });
-
-const Twitter = require('./twitter');
-const get = Twitter.get;
-
 
 
 
