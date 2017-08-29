@@ -15,6 +15,10 @@ export default class Tweet {
         tweet.spreadsheetId = null; // data.spreadsheet_id;
         tweet.oembed = data.oembed;
 
+        tweet.chart = {
+            data: {}
+        };
+
         tweet.view = {
 
             isShowOptions: false,

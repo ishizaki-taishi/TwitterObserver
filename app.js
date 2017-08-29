@@ -14,6 +14,9 @@ app.use(express.static('dist'));
 process.on('unhandledRejection', console.dir);
 
 
+const squel = require('squel');
+
+
 const Twitter = require('./twitter');
 const get = Twitter.get;
 
@@ -29,7 +32,6 @@ function escapeSQL(text) {
 }
 
 io.emit('restart');
-
 
 
 const interval = Math.floor(60 * 15 / (MAX_REQUEST_COUNT * 0.5) * 1000);
@@ -305,8 +307,45 @@ io.sockets.on('connection', async(socket) => {
 
 
 
+
+    /**
+     * [response description]
+     * @return {[type]} [description]
+     */
+    function response(name, callback) {
+        socket.on(name, async(...args) => {
+            const result = await callback(...args);
+            if (Array.isArray(result)) {
+                socket.emit(name, ...result);
+            } else {
+                socket.emit(name, result);
+            }
+            socket.emit(name, result);
+            dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+        });
+    }
+
+
+
+    socket.on('add-blacklist', (id) => {
+
+        dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+
+    });
+
+
+
+
     io.emit('log', `API Interval: ${interval}`);
 
+    // ブラックリスト
+    (async() => {
+
+        const { rows } = await dbQuery('SELECT * FROM blacklist');
+
+        socket.emit('blacklist', rows);
+
+    })();
 
     // DB のキャパシティを確認
     (async() => {
@@ -387,6 +426,19 @@ io.sockets.on('connection', async(socket) => {
 
     })();
 
+
+    response('add-blacklist', (id) => {
+
+
+        return 1;
+
+    });
+
+    socket.on('add-blacklist', (id) => {
+
+        dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+
+    });
 
 
     socket.on('search-hashtag', async(hashtag) => {

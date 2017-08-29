@@ -117,7 +117,7 @@ module.exports = class Twitter {
             });
 
 
-            params.max_id = $maxId.minus(1).d.join('');
+            params.max_id = $maxId.minus(1).toFixed();
 
 
             if ($maxId.equals($maxIdOld)) break;

@@ -16,12 +16,29 @@ import {
 } from './utils';
 
 
+import { Line } from 'vue-chartjs';
+
+
+
+console.log(Line);
+Line.extend({
+    props: ['data', 'options'],
+    mounted() {
+
+        this.renderChart(this.data, this.options);
+
+
+    }
+});
+
 
 
 let app = null;
 
 
 import Vue from './lib/vue';
+
+
 
 const TW_ID = '600720083413962752';
 
@@ -35,8 +52,6 @@ import Tweet from './tweet';
 // vuejs のコンポーネントを登録する
 import createVueComponents from './vue-components';
 createVueComponents(Vue);
-
-
 
 
 
@@ -128,8 +143,7 @@ function lottery(retweeters) {
 }
 
 
-let lotteryResolver = null;
-const lotteryUserResolvers = {};
+
 
 
 /**
@@ -271,26 +285,83 @@ app = new Vue({
             count: 0
         },
 
-        inputTime: '',
-        time: null,
-
-
         // 検索
         search: {
+
+            isLoading: false,
+
             // 検索に使用するハッシュタグ
-            hashtag: '勝つのは3番',
+            // hashtag: '勝つのは3番',
+            hashtag: 'セキテイリュウオー',
             // 検索結果
             results: []
-        }
+        },
+
+
+        blacklist: {
+            id: null,
+            users: []
+        },
+
+
+        inputTime: '',
+        time: null,
 
     },
 
 
+    computed: {
+        reversedTweets() {
+            return [...this.tweets].reverse();
+        }
+    },
+
 
     methods: {
 
+
+        /**
+         * 検索結果を監視ツイートの形式に変換する
+         * @return {[type]} [description]
+         */
+        searchResultToTweet() {
+
+
+
+            const tweet = Tweet.from({
+                id: '#' + app.$data.search.hashtag,
+                oembed: null
+
+            });
+
+            tweet.retweeters = [];
+
+
+
+
+
+            for (const u of app.$data.search.results) {
+
+                tweet.retweeters.push(User.from(u.status.data.user));
+
+            }
+
+            app.$data.tweets.push(tweet);
+
+
+        },
+
+        addBlacklist() {
+
+            const id = app.$data.blacklist.id;
+
+            socket.emit('add-blacklist', id);
+
+        },
+
         async searchHashtag() {
 
+            app.$data.search.isLoading = true;
 
             const hashtag = app.$data.search.hashtag;
 
@@ -308,8 +379,7 @@ app = new Vue({
 
             app.$data.search.results = results;
 
-
-            console.log(results);
+            app.$data.search.isLoading = false;
 
         },
 
@@ -367,6 +437,12 @@ app = new Vue({
 
     },
 
+
+    filters: {
+        reverse(array) {
+            return [...array].reverse();
+        }
+    },
 
     watch: {
 
@@ -521,6 +597,13 @@ socket.on('retweeters', async({ id, retweeters }) => {
 
 
 });
+
+
+// ブラックリストを受け取る
+socket.on('blacklist', (users) => {
+    app.$data.blacklist.users = [...users, ...users, ...users];
+});
+
 
 
 /*

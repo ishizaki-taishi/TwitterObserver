@@ -21,6 +21,21 @@ export default function createVueComponents(Vue) {
 
 
 
+
+        async beforeUpdate() {
+
+            /*
+            chart.data.labels.push(label);
+            chart.data.datasets.forEach((dataset) => {
+                dataset.data.push(data);
+            });
+            chart.update();
+
+            // グラフのデータを更新する
+            */
+
+        },
+
         async created() {
 
             const app = Vue.app;
@@ -31,6 +46,8 @@ export default function createVueComponents(Vue) {
             const context = this.$el.getContext('2d');
 
             const id = this.$el.getAttribute('tweet-id');
+
+            console.warn('Created: ', id, this.$el);
 
             const tweet = app.$data.tweets.filter((tweet) => tweet.id === id)[0];
 
@@ -66,34 +83,14 @@ export default function createVueComponents(Vue) {
 
                     labels: Array.from({ length: 24 }).map((_, index) => index),
 
-                    // label: 'tedt',
-                    // labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
                     datasets: [{
                         label: '# of retweets',
                         data: counts,
                         backgroundColor: ['rgba(255, 99, 132, 0.2)'],
                         borderColor: ['rgba(255,99,132,1)'],
-
-                        /*
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255,99,132,1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        */
                         borderWidth: 1
                     }]
+
                 },
                 options: {
                     scales: {
