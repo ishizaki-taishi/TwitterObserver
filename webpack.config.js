@@ -27,17 +27,23 @@ module.exports = {
 
     module: {
         loaders: [{
-            test: /\.js$/,
-            include: [
-                /src/,
-            ],
-            exclude: [
-                /node_modules/,
-                /lib/
-            ],
-            loader: 'babel-loader'
-        }]
+                test: /\.js$/,
+                include: [
+                    /src/,
+                ],
+                exclude: [
+                    /node_modules/,
+                    /lib/
+                ],
+                loader: 'babel-loader'
+            },
+            {
+                test: /\.vue$/,
+                loader: 'vue'
+            }
+        ]
     },
+
 
     target: 'web'
 

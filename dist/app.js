@@ -36175,6 +36175,9 @@ _vueChartjs.Line.extend({
 
 var app = null;
 
+// import Vue from 'vue';
+
+
 var TW_ID = '600720083413962752';
 
 // vuejs のコンポーネントを登録する

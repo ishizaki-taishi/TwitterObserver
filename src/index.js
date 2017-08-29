@@ -36,8 +36,8 @@ Line.extend({
 let app = null;
 
 
+// import Vue from 'vue';
 import Vue from './lib/vue';
-
 
 
 const TW_ID = '600720083413962752';

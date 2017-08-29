@@ -14,8 +14,6 @@ app.use(express.static('dist'));
 process.on('unhandledRejection', console.dir);
 
 
-const squel = require('squel');
-
 
 const Twitter = require('./twitter');
 const get = Twitter.get;
@@ -42,7 +40,6 @@ const RequestInterval = {
 
 const path = require('path');
 
-const databaseURL = 'postgres://zsmdfzjfczrdyi:16cdebdfc49073acbdb90c47a098d14bdd4a6bf5d6ee3ca31e0ee5c3c49e4804@ec2-54-221-221-153.compute-1.amazonaws.com:5432/d4k46sqvuojehi';
 
 
 function pgFormatDate(date) {
@@ -54,57 +51,14 @@ function pgFormatDate(date) {
     return [parsed.getUTCFullYear(), zeroPad(parsed.getMonth() + 1), zeroPad(parsed.getDate()), zeroPad(parsed.getHours()), zeroPad(parsed.getMinutes()), zeroPad(parsed.getSeconds())].join(" ");
 }
 
+
+const DB = require('./server/db');
+
+const dbClient = DB.$client;
+const query = DB.$query;
+const dbQuery = DB.$dbQuery;
+
 console.log('init');
-
-
-const { Pool, Client } = require('pg')
-const connectionString = process.env.DATABASE_URL || databaseURL;
-const pool = new Pool({
-    connectionString: connectionString,
-    ssl: true
-});
-const dbClient = new Client({
-    connectionString: connectionString,
-    ssl: true
-
-});
-dbClient.connect()
-
-
-function query(query) {
-    return new Promise((resolve) => {
-        dbClient.query(query, (e, res) => {
-            resolve({
-                error: e,
-                response: res
-            });
-        });
-    });
-}
-
-
-
-
-
-
-function dbQuery(query) {
-    return new Promise((resolve) => {
-        dbClient.query(query, (error, response) => {
-            if (error) throw error;
-
-            Object.defineProperty(response, 'value', {
-                get() {
-                    // 結果が 1 件だけなら value で取得可能
-                    if (response.rowCount !== 1) throw response;
-                    return response.rows[0];
-                }
-            });
-
-            resolve(response);
-        });
-    });
-}
-
 
 
 
@@ -178,7 +132,6 @@ async function getRT() {
 
         console.log('監視するツイート一覧: ', observeTweets);
 
-        io.emit('log', 'DB Connection' + connectionString);
 
         let index = 0;
 
@@ -295,17 +248,8 @@ setInterval(fetchUserStatus, 3000 * 2);
 
 
 
-class DB {
-    constructor() {}
-}
-
-
-
-
 
 io.sockets.on('connection', async(socket) => {
-
-
 
 
     /**
@@ -334,9 +278,8 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
-
-
     io.emit('log', `API Interval: ${interval}`);
+
 
     // ブラックリスト
     (async() => {
