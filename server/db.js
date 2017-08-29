@@ -30,6 +30,10 @@ module.exports = class DB {
         return client;
     }
 
+    static query(query) {
+        return DB.$dbQuery(query);
+    }
+
     static $query(query) {
         return new Promise((resolve) => {
             client.query(query, (e, res) => {
@@ -40,8 +44,6 @@ module.exports = class DB {
             });
         });
     }
-
-
 
     static $dbQuery(query) {
         return new Promise((resolve) => {
@@ -60,9 +62,5 @@ module.exports = class DB {
             });
         });
     }
-
-
-
-
 
 };

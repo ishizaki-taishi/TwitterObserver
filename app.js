@@ -5,17 +5,29 @@ const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+
+const path = require('path');
+
 io.listen(http);
 
 app.use(express.static('public'));
 app.use(express.static('dist'));
 
 
+
+app.get('/', async(req, res) => {
+    res.sendFile(path.resolve(__dirname, 'index.html'));
+});
+
+http.listen(port, () => {
+    console.log(`App listening on port ${port}`);
+});
+
+
 process.on('unhandledRejection', console.dir);
 
 
-
-const Twitter = require('./twitter');
+const Twitter = require('./server/twitter');
 const get = Twitter.get;
 
 
@@ -38,7 +50,6 @@ const RequestInterval = {
     StatusesRetweetersIds: 180000 // 3 分
 };
 
-const path = require('path');
 
 
 
@@ -284,7 +295,7 @@ io.sockets.on('connection', async(socket) => {
     // ブラックリスト
     (async() => {
 
-        const { rows } = await dbQuery('SELECT * FROM blacklist');
+        const { rows } = await DB.query('SELECT * FROM blacklist');
 
         socket.emit('blacklist', rows);
 
@@ -294,9 +305,9 @@ io.sockets.on('connection', async(socket) => {
     (async() => {
 
         // リツイート情報の総数
-        const { value } = await dbQuery('SELECT COUNT(*) FROM retweeters');
+        const { value } = await DB.query('SELECT COUNT(*) FROM retweeters');
 
-        io.emit('database-capacity', {
+        socket.emit('database-capacity', {
             max: DATABASE_CAPACITY,
             count: parseInt(value.count)
         });
@@ -441,14 +452,4 @@ io.sockets.on('connection', async(socket) => {
     });
 
 
-});
-
-
-
-app.get('/', async(req, res) => {
-    res.sendFile(path.resolve(__dirname, 'index.html'));
-});
-
-http.listen(port, function() {
-    console.log(`App listening on port ${port}`);
 });
