@@ -10,10 +10,7 @@ const { Pool, Client } = require('pg');
 
 const connectionString = process.env.DATABASE_URL || databaseURL;
 
-const pool = new Pool({
-    connectionString,
-    ssl: true
-});
+const pool = new Pool({});
 
 const client = new Client({
     connectionString,
@@ -30,9 +27,15 @@ module.exports = class DB {
         return client;
     }
 
+    /**
+     * クエリを実行する
+     * @param  {String} query クエリ
+     * @return {Object}       実行結果
+     */
     static query(query) {
         return DB.$dbQuery(query);
     }
+
 
     static $query(query) {
         return new Promise((resolve) => {

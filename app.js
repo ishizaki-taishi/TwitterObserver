@@ -28,6 +28,9 @@ process.on('unhandledRejection', console.dir);
 
 
 const Twitter = require('./server/twitter');
+
+
+
 const get = Twitter.get;
 
 
@@ -37,9 +40,16 @@ const DATABASE_CAPACITY = 10000;
 const MAX_REQUEST_COUNT = 300;
 
 
+/**
+ * ' を '' に置換する
+ * @param  {String} text SQL クエリ
+ * @return {String}      エスケープされた SQL クエリ
+ */
 function escapeSQL(text) {
     return text.replace(/'/g, `''`);
 }
+
+
 
 io.emit('restart');
 
@@ -317,18 +327,16 @@ io.sockets.on('connection', async(socket) => {
     })();
 
 
+    // 埋め込みツイートを生成して投げる
     (async() => {
 
         let test = [];
-
 
         for (const id of observeTweets) {
 
             const { html } = await get('statuses/oembed', {
                 url: `https://twitter.com/_/status/${id}`
             });
-
-            console.log('oembed');
 
             test.push({
                 id,
@@ -381,16 +389,9 @@ io.sockets.on('connection', async(socket) => {
     })();
 
 
-    response('add-blacklist', (id) => {
-
-
-        return 1;
-
-    });
-
     socket.on('add-blacklist', (id) => {
 
-        dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+        DB.query(`INSERT INTO blacklist (id) VALUES ('${id}')`);
 
     });
 

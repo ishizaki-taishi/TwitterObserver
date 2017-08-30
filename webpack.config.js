@@ -37,10 +37,12 @@ module.exports = {
                 ],
                 loader: 'babel-loader'
             },
+            /*
             {
                 test: /\.vue$/,
                 loader: 'vue'
             }
+            */
         ]
     },
 

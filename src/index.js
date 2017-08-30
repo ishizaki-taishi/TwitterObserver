@@ -40,9 +40,6 @@ let app = null;
 import Vue from './lib/vue';
 
 
-const TW_ID = '600720083413962752';
-
-
 
 
 import User from './user';
@@ -166,7 +163,7 @@ async function setLotteryResult(users) {
 
         try {
 
-            twttr.widgets.createTimeline(TW_ID, el, {
+            twttr.widgets.createTimeline('600720083413962752', el, {
                 screenName: user.screenName
             });
 
@@ -179,6 +176,10 @@ async function setLotteryResult(users) {
 }
 
 
+/**
+ * [isMixed description]
+ * @type {Boolean}
+ */
 async function $lottery({ target }, n, isMixed = false) {
 
     // 対象のツイート ID

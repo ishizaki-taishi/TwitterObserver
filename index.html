@@ -214,6 +214,11 @@
                             </div>
 
 
+                            <input type="checkbox" :id="'checkbox-blacklist-'+tweet.id" v-model="tweet.view.useBlacklist">
+                            <label for="'checkbox-blacklist-'+tweet.id"> ブラックリストを使用{{ tweet.view.useBlacklist ? 'する' : 'しない' }}</label>
+
+                            <br>
+
 
                             <div class="form-inline" style="display: inline-block">
                                 <input disabled type="number" maxlength="14" v-model="inputTime" placeholder="until time" class="form-control">

@@ -35926,7 +35926,7 @@ var setLotteryResult = function () {
 
                             try {
 
-                                twttr.widgets.createTimeline(TW_ID, el, {
+                                twttr.widgets.createTimeline('600720083413962752', el, {
                                     screenName: user.screenName
                                 });
                             } catch (e) {
@@ -35979,6 +35979,12 @@ var setLotteryResult = function () {
         return _ref.apply(this, arguments);
     };
 }();
+
+/**
+ * [isMixed description]
+ * @type {Boolean}
+ */
+
 
 var $lottery = function () {
     var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(_ref2, n) {
@@ -36177,8 +36183,6 @@ var app = null;
 
 // import Vue from 'vue';
 
-
-var TW_ID = '600720083413962752';
 
 // vuejs のコンポーネントを登録する
 
@@ -66911,6 +66915,8 @@ var Tweet = function () {
 
                 followerCountCheck: false,
                 followerCountBorder: null,
+
+                useBlacklist: true,
 
                 time: null
 

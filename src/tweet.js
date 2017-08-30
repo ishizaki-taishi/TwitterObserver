@@ -19,6 +19,8 @@ export default class Tweet {
             data: {}
         };
 
+
+
         tweet.view = {
 
             isShowOptions: false,
@@ -28,6 +30,8 @@ export default class Tweet {
 
             followerCountCheck: false,
             followerCountBorder: null,
+
+            useBlacklist: true,
 
             time: null
 
