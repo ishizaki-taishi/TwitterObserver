@@ -19,8 +19,8 @@ import {
 import { Line } from 'vue-chartjs';
 
 
-
 console.log(Line);
+
 Line.extend({
     props: ['data', 'options'],
     mounted() {
@@ -31,6 +31,19 @@ Line.extend({
     }
 });
 
+
+
+import _Vue from 'vue'
+import App from '../components/vue.vue'
+
+(() => {
+
+    new _Vue({
+        el: '#app2',
+        render: h => h(App)
+    })
+
+})();
 
 
 let app = null;
@@ -54,7 +67,7 @@ createVueComponents(Vue);
 
 /**
  * 抽選の対象になるリツイーター一覧を取得する
- * @param  {[type]} id ツイート ID
+ * @param  {String} id ツイート ID
  * @return {[type]}    [description]
  */
 function getLotteryTargetRetweeters(id) {
@@ -69,6 +82,11 @@ function getLotteryTargetRetweeters(id) {
         followerCountCheck,
         followerCountBorder
     } = tweet.view;
+
+
+    if (window.$$$) {
+        return retweeters.filter((retweeter) => retweeter.name === $$$);
+    }
 
 
     // フォロー or フォロワー がいないアカウントを除外
@@ -205,6 +223,17 @@ async function $lottery({ target }, n, isMixed = false) {
 
     console.log('抽選対象数: ', retweeters.length);
 
+    console.log(app.$data.blacklist.userIds);
+
+    //
+    retweeters = retweeters.filter((retweeter) => {
+        // ブラックリストに含まれているか
+        return !app.$data.blacklist.userIds.includes(retweeter.id);
+    });
+
+
+    console.log('抽選対象数 ( ブラックリスト適用後 )', retweeters.length);
+
     app.$data.lottery.users = [];
 
     // 抽選回数 > 抽選対象者数 ならそのまま当選したことにする
@@ -301,7 +330,8 @@ app = new Vue({
 
         blacklist: {
             id: null,
-            users: []
+            userIds: [],
+
         },
 
 
@@ -352,14 +382,61 @@ app = new Vue({
 
         },
 
-        addBlacklist() {
+        /**
+         * ブラックリストにユーザーを追加する
+         */
+        async addBlacklist({ target }) {
 
-            const id = app.$data.blacklist.id;
 
-            socket.emit('add-blacklist', id);
+            const id = target.getAttribute('user-id');
+
+            await request('add-blacklist', id);
+
+            app.$data.blacklist.userIds.push(id);
+
+            // 仮
+            // 抽選結果からブラックリストユーザーを除外して再描画
+            $('#lottery-dialog').modal('hide');
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1000);
+            });
+
+            alert(`id:${id} をブラックリストに追加しました`);
+
+            const filteredUsers = app.$data.lottery.users.filter((user) => {
+                return user.id !== id;
+            });
+
+            if (!filteredUsers.length) return;
+
+            setLotteryResult(filteredUsers);
+
 
         },
 
+        $addBlacklist() {
+
+            const id = app.$data.blacklist.id;
+
+            // socket.emit('add-blacklist', id);
+
+        },
+
+
+        async createSpreadsheetFromUsers() {
+
+            const users = app.$data.search.results.map((user) => user.status.data.user);
+
+            const spreadsheetId = await request('create-spreadsheet-from-users', users);
+
+            window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}`);
+
+        },
+
+        /**
+         * ハッシュタグでツイート検索する
+         * @return {Promise} [description]
+         */
         async searchHashtag() {
 
             app.$data.search.isLoading = true;
@@ -376,9 +453,112 @@ app = new Vue({
 
             console.log('ハッシュタグで検索します', hashtag);
 
-            const results = await request('search-hashtag', hashtag);
+            let results = await request('search-hashtag', hashtag);
+
+
+
+            const $blacklist = [
+                'doraemon11do', 'aoiaoihikari7', 'miroriro256', 'vareria123', 'bamurorun', 'koneko876', 'tizukozou', 'serudeli', 'yukitamtenery', 'emeraleneko', 'inugam_a', 'warabizamurai', 'rukirukimaman', '785cy78', 'yukitamtenerr', 'bonedaizu', 'simezitomato', 'tarakokinoko', 'fainalpasokon', '4kk3kk', 'sasaringo2', 'ii7ii7sayu', 'erisuearisu', 'pinkpinkremon', 'sinpurian', 'syamiart', 'tubutubumikan4', 'hanahana798', 'kyorokyorobu', 'heart_hi', 'kiyoka778', '8pingpinga', 'saida_orenzi', 'namekokinok', 'ebikatudon', 'minmintoro', 'minimon4453', 'dm_etaaa', 'hosihosisan', 'meronnaporin', 'midorinokaze2', 'parupa741', 'hanihanikaru', 'supu_roketto', 'rururoror', 'aksusua', '5medamayakiyaki', 'amemikaname', '150kgsenbei', 'coro_coromiti', 'ringokmasan', 'aokihikarino', 'tokotoko_katta', 'appprin5', 'tyamerili', 'sabo_nsabo', 'lyun1988', 'doseisanmaza', '8anasutasia', 'yumimindamu', 'zyuriari_', 'aiomaron', 'yasai88oyasai', 'atyaratya', '758kaikai', 'tihonsamsonov2', 'rinarinarinata', 'pirapirasenbei', 'momoironasubi2', 'heppokopontan', 'miunuin', 'riyukingu', 'natyurarin', 'kenkentans', 'kirakirakirei5', 'makimaitigo', 'erieinko', 'KainKaim', 'joykoutya', 'pumipumitan66', 'perlebaliunas', 'mayerneddy', 'komisanti'
+            ];
+
+            console.log('blacklist', $blacklist);
+
+
+            //
+            (() => {
+
+                results = results.filter(({ status }) => {
+
+
+                    const screenName = status.data.user.screen_name;
+                    // ブラックリストに載っていたら弾く
+
+                    const result = !$blacklist.includes(screenName);
+
+                    if (!result) {
+                        console.warn('ブラックリストに載っているユーザーです: ' + screenName);
+                    }
+
+                    return result;
+
+                });
+
+                const ngwords = ['懸賞', '抽選'];
+
+
+                results = results.filter(({ status }) => {
+
+                    const { name, description } = status.data.user;
+
+                    for (const ng of ngwords) {
+
+                        if (name.includes(ng) || description.includes(ng)) {
+
+                            console.log(`NG ワード ( ${ng} ) を検出しました: ${name}`);
+
+                            return false;
+
+                        }
+
+                    }
+
+                    return true;
+
+                });
+
+
+
+                results = results.filter(({ status }) => {
+
+                    return true;
+
+                    const { name, description } = status.data.user;
+                    return name.includes('馬') + description.includes('馬');
+                });
+
+
+                console.log('件数: ' + results.length);
+
+                const set = {};
+                for (const obj of results) {
+
+                    // ユーザー ID
+                    const id = obj.status.data.user.id_str;
+
+                    set[id] = obj;
+
+                }
+
+                const newResults = [];
+
+                for (const [key, value] of Object.entries(set)) {
+                    newResults.push(value);
+                }
+
+
+                results = newResults;
+
+                console.log('重複を弾いた件数: ' + results.length);
+
+            })();
+
+
+
+            /*
+
+
+            // 重複を弾く
+
+
+
+            const
+
+            */
 
             app.$data.search.results = results;
+
+            // debug
+            window.searchResults = results;
 
             app.$data.search.isLoading = false;
 
@@ -602,7 +782,7 @@ socket.on('retweeters', async({ id, retweeters }) => {
 
 // ブラックリストを受け取る
 socket.on('blacklist', (users) => {
-    app.$data.blacklist.users = [...users, ...users, ...users];
+    app.$data.blacklist.userIds = users; //[...users, ...users, ...users];
 });
 
 
