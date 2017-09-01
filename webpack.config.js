@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 
-console.log('WEBPACK');
 
 module.exports = {
 
@@ -26,7 +25,22 @@ module.exports = {
     ],
 
     module: {
-        loaders: [{
+        loaders: [
+
+
+            {
+                test: /\.vue$/,
+                // include: /components/,
+                loader: 'vue-loader',
+
+                options: {
+                    loaders: {
+                        js: 'babel-loader'
+                    }
+                }
+            },
+
+            {
                 test: /\.js$/,
                 include: [
                     /src/,
@@ -44,6 +58,16 @@ module.exports = {
             }
             */
         ]
+    },
+
+
+    resolve: {
+        alias: {
+            'vue$': 'vue/dist/vue.common.js',
+
+            // 'vue$': 'vue/dist/vue.common.js'
+            // 'vue$': 'src/lib/vue.js'
+        }
     },
 
 

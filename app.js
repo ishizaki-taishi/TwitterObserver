@@ -28,6 +28,8 @@ process.on('unhandledRejection', console.dir);
 
 
 const Twitter = require('./server/twitter');
+const Spreadsheet = require('./server/spreadsheet');
+
 
 
 
@@ -92,7 +94,6 @@ function getObserveTweetIds() {
 
 
 
-const Spreadsheet = require('./spreadsheet');
 
 // リツイート情報をスプレッドシートに反映する
 async function writeSpreadsheet(id) {
@@ -292,12 +293,13 @@ io.sockets.on('connection', async(socket) => {
 
 
 
+    /*
     socket.on('add-blacklist', (id) => {
 
         dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
 
     });
-
+    */
 
     io.emit('log', `API Interval: ${interval}`);
 
@@ -307,7 +309,7 @@ io.sockets.on('connection', async(socket) => {
 
         const { rows } = await DB.query('SELECT * FROM blacklist');
 
-        socket.emit('blacklist', rows);
+        socket.emit('blacklist', rows.map((row) => row.id));
 
     })();
 
@@ -389,9 +391,51 @@ io.sockets.on('connection', async(socket) => {
     })();
 
 
-    socket.on('add-blacklist', (id) => {
+    socket.on('create-spreadsheet-from-users', async(users) => {
 
-        DB.query(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+        console.log('create-spreadsheet-from-users');
+
+        const { spreadsheetId } = await Spreadsheet.create();
+
+        await Spreadsheet.update(spreadsheetId, users, io);
+
+        socket.emit('create-spreadsheet-from-users', spreadsheetId);
+
+    });
+
+
+    /*
+        socket.on('', (id) => {
+
+            // スプレッドシートを作成して DB に登録する
+            const { spreadsheetId } = await Spreadsheet.create();
+
+
+            console.log('スプレッドシートに書き込みます');
+
+            // const { spreadsheet_id } = (await query(`SELECT * FROM observe_tweets WHERE id = '${id}'`)).response.rows[0];
+
+            const retweeters = (await query(`SELECT * FROM retweeters WHERE target_id = '${id}'`)).response.rows;
+
+            await Spreadsheet.update(spreadsheet_id, retweeters, io);
+
+            console.log('スプレッドシートに書き込みました');
+
+
+
+        });
+
+    */
+
+    socket.on('add-blacklist', async(id) => {
+
+        console.log('ブラックリストに追加します:', id);
+
+        await DB.query(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+
+        // 成功
+        socket.emit('add-blacklist', true);
+
 
     });
 

@@ -66,6 +66,8 @@
 
 <body>
 
+    <div id="app2"></div>
+
     <div id="app">
 
         <header class="header navbar navbar-light navbar-toggleable-md bd-navbar">
@@ -132,7 +134,7 @@
                         Loading...
                     </div>
 
-                    <div v-if="search.results.length">
+                    <div v-if="search.results.length" style="width:100%">
                         <hr>
                         <h3>取得数: {{ search.results.length }}</h3>
                         <hr>
@@ -143,13 +145,15 @@
                             <div v-for="result in search.results">
                                 <span style="font-weight:bold">{{ result.status.data.user.name }} @{{ result.status.data.user.screen_name }}</span>
                                 <br>{{ new Date(result.status.data.created_at).toLocaleString() }}
+                                <br><a :href="'https://twitter.com/_/status/' + result.status.data.id_str" target="_blank">{{result.status.data.id_str}}</a>
                             </div>
 
                         </div>
 
                         <hr>
-                        <button class="btn btn-primary" @click="searchResultToTweet">検索結果を抽選対象に変換</button>
 
+                        <button class="btn btn-primary" @click="searchResultToTweet">検索結果を抽選対象に変換</button>
+                        <button class="btn btn-success" @click="createSpreadsheetFromUsers">検索結果をスプレッドシートに書き込む</button>
 
                     </div>
 
@@ -172,6 +176,7 @@
                     <button @click="writeSpreadsheet" :disabled="!tweet.retweeters.length" :tweet-id="tweet.id" role="button" data-backdrop="static" data-toggle="modal" data-target="#myModal" class="mb-2 btn btn-outline-success" type="submit">Spreadsheet</button>
 
                     <button disabled type="button" class="mb-2 btn btn-outline-danger">削除</button>
+
 
                     <hr>
 
@@ -308,7 +313,7 @@
 
                     <input type="text" v-model="blacklist.id" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="@screen_name">
 
-                    <button class="btn form-control btn-outline-primary" type="submit" @click="addBlacklist">追加</button>
+                    <button class="btn form-control btn-outline-primary" type="submit" @click="$addBlacklist">追加</button>
 
 
                 </form>
@@ -316,7 +321,7 @@
                 <hr>
 
 
-                <div v-for="user in blacklist.users">
+                <div v-for="user in blacklist.userIds">
                     {{ user }}
                 </div>
 
@@ -398,7 +403,10 @@
                             <hr /> フォロー: {{ user.followCount }}<br> フォロワー: {{ user.followerCount }}<br> FF 比: {{ user.ffRatio }}
                             <hr />
 
+                            <!-- ユーザー TL 埋め込み -->
                             <div :id="'lu' + user.id"></div>
+
+                            <button type="button" :user-id="user.id" @click="addBlacklist" class="btn btn-danger" style="width:100%">ブラックリストに追加</button>
 
 
 

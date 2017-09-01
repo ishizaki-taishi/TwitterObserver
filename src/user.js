@@ -14,7 +14,7 @@ export default class User {
 
         const user = new User();
 
-        user.id = data.id;
+        user.id = data.id_str || data.id;
         user.name = data.name;
         user.screenName = data.screen_name;
         user.followCount = data.friends_count;
