@@ -5,9 +5,10 @@
 </style>
 
 <template>
-<div>
+<div id="cheap-module-eval-source-map">
 
-    <h1 class="red">{{msg}}</h1>
+    <b-alert variant="success" show>{{ msg }}</b-alert>
+
     <c></c>
 
 </div>
@@ -15,6 +16,18 @@
 
 <script>
 import C from './c.vue';
+
+import {
+    bAlert,
+    bBtn,
+    bCollapse
+} from 'bootstrap-vue/lib/components';
+
+import {
+    bToggle,
+    bScrollspy
+} from 'bootstrap-vue/lib/directives';
+
 
 export default {
     data() {

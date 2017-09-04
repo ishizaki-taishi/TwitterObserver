@@ -18,11 +18,16 @@ module.exports = {
         filename: '[name].js'
     },
 
+    /*
     plugins: [
         new webpack.optimize.UglifyJsPlugin({
             include: /src/
         })
     ],
+
+    devtool: 'cheap-module-eval-source-map',
+
+    */
 
     module: {
         loaders: [
@@ -43,14 +48,29 @@ module.exports = {
             {
                 test: /\.js$/,
                 include: [
-                    /src/,
-                ],
-                exclude: [
-                    /node_modules/,
-                    /lib/
+                    path.resolve(__dirname, 'src'),
+                    path.resolve(__dirname, 'node_modules/bootstrap-vue')
                 ],
                 loader: 'babel-loader'
             },
+
+
+            // StyleLoader
+            {
+                test: /\.css$/,
+                loader: 'style-loader!css-loader'
+            },
+
+            {
+                test: /\.(png|jpg)$/,
+                loader: 'url-loader?limit=8192'
+            },
+
+            {
+                test: /\.(ttf|eot|svg|woff(2)?)(\?[a-z0-9=&.]+)?$/,
+                loader: 'file-loader'
+            }
+
             /*
             {
                 test: /\.vue$/,
@@ -62,11 +82,10 @@ module.exports = {
 
 
     resolve: {
+
         alias: {
             'vue$': 'vue/dist/vue.common.js',
 
-            // 'vue$': 'vue/dist/vue.common.js'
-            // 'vue$': 'src/lib/vue.js'
         }
     },
 

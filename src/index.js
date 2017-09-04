@@ -1,5 +1,5 @@
 // WebSocket
-const socket = io(location.href.replace('http', 'ws'), {
+const socket = io(location.href.replace(/^http/, 'ws'), {
     transports: ['websocket']
 });
 
@@ -15,7 +15,7 @@ import {
     formatTime16
 } from './utils';
 
-
+/*
 import { Line } from 'vue-chartjs';
 
 
@@ -31,14 +31,36 @@ Line.extend({
     }
 });
 
+*/
 
 
-import _Vue from 'vue'
-import App from '../components/vue.vue'
+
+import _Vue from 'vue';
+
+
+import App from '../components/App.vue';
+
+import BootstrapVue from 'bootstrap-vue'
+
+
+
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'bootstrap/dist/css/bootstrap.css';
+
+
+import store from './store';
+
 
 (() => {
 
+    _Vue.use(BootstrapVue);
+
+
+
     new _Vue({
+
+        store,
+
         el: '#app2',
         render: h => h(App)
     })
