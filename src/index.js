@@ -1,7 +1,8 @@
-// WebSocket
-const socket = io(location.href.replace(/^http/, 'ws'), {
-    transports: ['websocket']
-});
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+
+import socket from './socket';
+
 
 window.socket = socket;
 
@@ -42,10 +43,6 @@ import App from '../components/App.vue';
 
 import BootstrapVue from 'bootstrap-vue'
 
-
-
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-import 'bootstrap/dist/css/bootstrap.css';
 
 
 import store from './store';
@@ -148,30 +145,7 @@ function getLotteryTargetRetweeters(id) {
 
 
 
-/**
- * WebSocket でリクエストを送り結果を受け取る
- * @param  {[type]} name WebSocket のイベント名
- * @param  {[type]} args 引数
- */
-function request(name, ...args) {
-
-    // 既に登録されていたリスナーを削除する
-    socket.off(name);
-
-    return new Promise((resolve) => {
-
-        // 結果を受け取ったら resolve
-        socket.on(name, (...args) => {
-
-            resolve(...args);
-
-        });
-
-        socket.emit(name, ...args);
-
-    });
-}
-
+import { request } from './socket';
 
 
 // リツイーターから 1 ユーザーを抽選する

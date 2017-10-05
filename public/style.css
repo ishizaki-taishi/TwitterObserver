@@ -5,7 +5,8 @@ html, body {
 
 body {
     font-family: benton-sans, "Helvetica Neue", helvetica, arial, sans-serif;
-    font-family: 'Oswald', sans-serif;
+    /* font-family: 'Oswald', sans-serif; */
+    font-family: Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
     /* background: rgb(247, 248, 251); */
 }
 

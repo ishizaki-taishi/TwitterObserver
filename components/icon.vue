@@ -1,7 +1,7 @@
 <template>
-<div>
+<span>
     <i :class="'fa fa-' + fa" aria-hidden="true"></i>
-</div>
+</span>
 </template>
 
 <script>

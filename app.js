@@ -31,8 +31,6 @@ const Twitter = require('./server/twitter');
 const Spreadsheet = require('./server/spreadsheet');
 
 
-
-
 const get = Twitter.get;
 
 
@@ -274,34 +272,51 @@ setInterval(fetchUserStatus, 3000 * 2);
 io.sockets.on('connection', async(socket) => {
 
 
-    /**
-     * [response description]
-     * @return {[type]} [description]
-     */
     function response(name, callback) {
-        socket.on(name, async(...args) => {
+
+        socket.on(name, async($name, ...args) => {
+
             const result = await callback(...args);
-            if (Array.isArray(result)) {
-                socket.emit(name, ...result);
-            } else {
-                socket.emit(name, result);
-            }
-            socket.emit(name, result);
-            dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+
+            socket.emit($name, result);
+
         });
+
     }
 
 
 
-    /*
-    socket.on('add-blacklist', (id) => {
 
-        dbQuery(`INSERT INTO blacklist (id) VALUES ('${id}')`);
+    response('GET_TWEETS', () => {
+
+        const tweetIds = observeTweets;
+
+        const tweets = observeTweets.map((id) => ({ id }));
+
+        return tweets;
 
     });
-    */
 
-    io.emit('log', `API Interval: ${interval}`);
+
+    response('GET_RETWEETERS', async(tweetId) => {
+
+        const { rows } = await DB.query(`SELECT * FROM retweeters WHERE target_id = '${tweetId}'`);
+
+        return rows;
+
+    });
+
+
+    response('GET_OEMBED', async(id) => {
+
+        const { html } = await Twitter.get('statuses/oembed', {
+            url: `https://twitter.com/_/status/${id}`
+        });
+
+        return html;
+
+    });
+
 
 
     // ブラックリスト
