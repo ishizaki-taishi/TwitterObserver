@@ -33,7 +33,7 @@ export default class Tweet {
 
             useBlacklist: true,
 
-            time: null
+            time: null,
 
 
         };

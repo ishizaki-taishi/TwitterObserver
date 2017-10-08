@@ -320,6 +320,8 @@ app = new Vue({
 
             isLoading: false,
 
+            includeNativeretweets: false,
+
             // 検索に使用するハッシュタグ
             // hashtag: '勝つのは3番',
             hashtag: 'セキテイリュウオー',
@@ -359,8 +361,9 @@ app = new Vue({
 
 
 
+
             const tweet = Tweet.from({
-                id: '#' + app.$data.search.hashtag,
+                id: app.$data.search.hashtag,
                 oembed: null
 
             });
@@ -453,8 +456,9 @@ app = new Vue({
 
             console.log('ハッシュタグで検索します', hashtag);
 
-            let results = await request('search-hashtag', hashtag);
+            const filter = app.$data.search.includeNativeretweets ? 'include:nativeretweets ' : '';
 
+            let results = await request('search-hashtag', filter + hashtag);
 
 
             const $blacklist = [
@@ -462,7 +466,6 @@ app = new Vue({
             ];
 
             console.log('blacklist', $blacklist);
-
 
             //
             (() => {

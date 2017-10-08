@@ -444,7 +444,7 @@ io.sockets.on('connection', async(socket) => {
 
         console.log('ハッシュタグで検索します', hashtag);
 
-        const response = await Twitter.$search(`#${hashtag}`, {
+        const response = await Twitter.$search(`${hashtag}`, {
 
             count: 100,
 

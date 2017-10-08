@@ -39375,6 +39375,8 @@ app = new _vue6.default({
 
             isLoading: false,
 
+            includeNativeretweets: false,
+
             // 検索に使用するハッシュタグ
             // hashtag: '勝つのは3番',
             hashtag: 'セキテイリュウオー',
@@ -39408,7 +39410,7 @@ app = new _vue6.default({
         searchResultToTweet: function searchResultToTweet() {
 
             var tweet = _tweet2.default.from({
-                id: '#' + app.$data.search.hashtag,
+                id: app.$data.search.hashtag,
                 oembed: null
 
             });
@@ -39552,7 +39554,7 @@ app = new _vue6.default({
          */
         searchHashtag: function () {
             var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
-                var hashtag, results, $blacklist;
+                var hashtag, filter, results, $blacklist;
                 return regeneratorRuntime.wrap(function _callee5$(_context5) {
                     while (1) {
                         switch (_context5.prev = _context5.next) {
@@ -39576,10 +39578,11 @@ app = new _vue6.default({
 
                                 console.log('ハッシュタグで検索します', hashtag);
 
-                                _context5.next = 8;
-                                return request('search-hashtag', hashtag);
+                                filter = app.$data.search.includeNativeretweets ? 'include:nativeretweets ' : '';
+                                _context5.next = 9;
+                                return request('search-hashtag', filter + hashtag);
 
-                            case 8:
+                            case 9:
                                 results = _context5.sent;
                                 $blacklist = ['doraemon11do', 'aoiaoihikari7', 'miroriro256', 'vareria123', 'bamurorun', 'koneko876', 'tizukozou', 'serudeli', 'yukitamtenery', 'emeraleneko', 'inugam_a', 'warabizamurai', 'rukirukimaman', '785cy78', 'yukitamtenerr', 'bonedaizu', 'simezitomato', 'tarakokinoko', 'fainalpasokon', '4kk3kk', 'sasaringo2', 'ii7ii7sayu', 'erisuearisu', 'pinkpinkremon', 'sinpurian', 'syamiart', 'tubutubumikan4', 'hanahana798', 'kyorokyorobu', 'heart_hi', 'kiyoka778', '8pingpinga', 'saida_orenzi', 'namekokinok', 'ebikatudon', 'minmintoro', 'minimon4453', 'dm_etaaa', 'hosihosisan', 'meronnaporin', 'midorinokaze2', 'parupa741', 'hanihanikaru', 'supu_roketto', 'rururoror', 'aksusua', '5medamayakiyaki', 'amemikaname', '150kgsenbei', 'coro_coromiti', 'ringokmasan', 'aokihikarino', 'tokotoko_katta', 'appprin5', 'tyamerili', 'sabo_nsabo', 'lyun1988', 'doseisanmaza', '8anasutasia', 'yumimindamu', 'zyuriari_', 'aiomaron', 'yasai88oyasai', 'atyaratya', '758kaikai', 'tihonsamsonov2', 'rinarinarinata', 'pirapirasenbei', 'momoironasubi2', 'heppokopontan', 'miunuin', 'riyukingu', 'natyurarin', 'kenkentans', 'kirakirakirei5', 'makimaitigo', 'erieinko', 'KainKaim', 'joykoutya', 'pumipumitan66', 'perlebaliunas', 'mayerneddy', 'komisanti'];
 
@@ -39741,7 +39744,7 @@ app = new _vue6.default({
 
                                 app.$data.search.isLoading = false;
 
-                            case 15:
+                            case 16:
                             case 'end':
                                 return _context5.stop();
                         }
