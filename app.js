@@ -14,6 +14,12 @@ app.use(express.static('public'));
 app.use(express.static('dist'));
 
 
+const google = require('googleapis');
+// var OAuth2 = google.auth.OAuth2;
+
+
+console.log(google);
+
 
 app.get('/', async(req, res) => {
     res.sendFile(path.resolve(__dirname, 'index.html'));

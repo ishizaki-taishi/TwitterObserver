@@ -13,7 +13,7 @@
         "decimal.js": "^7.2.3",
         "express": "^4.15.4",
         "google-auth-library": "^0.10.0",
-        "googleapis": "^20.1.0",
+        "googleapis": "^20.2.0",
         "lodash": "^4.17.4",
         "lodash.startcase": "^4.4.0",
         "mz": "^2.6.0",
