@@ -24,3 +24,5 @@ export const GET_RETWEETERS = 'GET_RETWEETERS';
 
 
 export const GET_OEMBED = 'GET_OEMBED';
+
+export const LOTTERY = 'LOTTERY';

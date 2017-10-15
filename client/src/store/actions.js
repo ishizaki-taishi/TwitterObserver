@@ -7,7 +7,7 @@ import {
 
 } from './mutation-types';
 
-import { SEARCH, GET_TWEETS, GET_RETWEETERS, GET_OEMBED } from './mutation-types';
+import { SEARCH, GET_TWEETS, GET_RETWEETERS, GET_OEMBED, LOTTERY } from './mutation-types';
 
 import { request } from '../socket';
 
@@ -28,6 +28,10 @@ export default {
 
     [SEARCH]({ commit, state }) {
 
+    },
+
+    [LOTTERY]({ commit }, { count }) {
+        commit(LOTTERY, count)
     },
 
     async [GET_TWEETS]({ commit, dispatch }) {

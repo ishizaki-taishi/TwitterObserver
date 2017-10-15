@@ -1,7 +1,13 @@
 <template>
-<v-data-table v-bind:pagination.sync="pagination" v-model="selected" :headers="headers" select-all :items="users" hide-actions class="elevation-1">
+<div>
+    <v-text-field append-icon="search" label="Search" single-line hide-details v-model="search"></v-text-field>
 
-    <template slot="items" scope="props">
+
+    <v-divider></v-divider>
+
+    <v-data-table class="elevation-0" v-bind:pagination.sync="pagination" v-model="selected" :headers="headers" select-all :items="users" hide-actions>
+
+        <template slot="items" scope="props">
             <td>
                 <v-checkbox primary hide-details v-model="props.selected"></v-checkbox>
             </td>
@@ -14,7 +20,11 @@
 
 
         </template>
-</v-data-table>
+    </v-data-table>
+    <div class="text-xs-center pt-2">
+        <v-pagination v-model="pagination.page" :length="pages"></v-pagination>
+    </div>
+</div>
 </template>
 
 <script>
@@ -27,7 +37,11 @@ export default {
     },
 
     computed: {
-        aa(a) { return this.users; }
+
+        pages() {
+            return this.pagination.rowsPerPage ? Math.ceil(this.users.length / this.pagination.rowsPerPage) : 0
+        }
+
     },
 
     data: () => ({
@@ -42,8 +56,6 @@ export default {
             { text: 'screen_name' },
             { text: 'createdAt' },
         ]
-
-
     }),
 
     //    computed: mapGetters(['headers', 'devices', 'currentDevices']),

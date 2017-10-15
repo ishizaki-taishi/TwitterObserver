@@ -6,13 +6,15 @@ import {
     TAB_CHANGE
 } from './mutation-types';
 
-import { SEARCH, GET_TWEETS, GET_RETWEETERS, GET_OEMBED } from './mutation-types';
+import { SEARCH, GET_TWEETS, GET_RETWEETERS, GET_OEMBED, LOTTERY } from './mutation-types';
 
 export default {
 
     [SEARCH](state, keyword) {
         state.keyword = keyword;
     },
+
+    [LOTTERY](state, count) {},
 
     [GET_TWEETS](state, tweets) {
 

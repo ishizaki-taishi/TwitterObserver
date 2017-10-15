@@ -15,15 +15,62 @@ app.use(express.static('dist'));
 
 
 const google = require('googleapis');
-// var OAuth2 = google.auth.OAuth2;
+const OAuth2 = google.auth.OAuth2;
 
 
-console.log(google);
+var oauth2Client = new OAuth2(
+    '542171395987-vbnicqt56p8mnobc7epms8f9ar95qkpo.apps.googleusercontent.com',
+    '_leS5PJIhhuycpdBDLrmDKbW',
+    'http://localhost:8080'
+);
+
+
+// generate a url that asks permissions for Google+ and Google Calendar scopes
+var scopes = [
+    'https://www.googleapis.com/auth/plus.me',
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/userinfo.profile',
+];
+
+var url = oauth2Client.generateAuthUrl({
+    // 'online' (default) or 'offline' (gets refresh_token)
+    access_type: 'offline',
+
+    // If you only need one scope you can pass it as a string
+    scope: scopes,
+
+    // Optional property that passes state parameters to redirect URI
+    // state: { foo: 'bar' }
+});
+
+console.log(url);
+
+
+
 
 
 app.get('/', async(req, res) => {
-    res.sendFile(path.resolve(__dirname, 'index.html'));
+
+    // 認証コードがないなら認証画面に移動する
+    if (!req.query.code) {
+        return res.redirect(url);
+    }
+
+    oauth2Client.getToken(req.query.code, (err, tokens) => {
+        // 認証失敗
+        if (err) {
+            return res.sendFile(path.resolve(__dirname, 'error.html'));
+        }
+
+        // 認証成功
+        oauth2Client.setCredentials(tokens);
+        res.sendFile(path.resolve(__dirname, 'index.html'));
+
+    });
+
 });
+
+
 
 http.listen(port, () => {
     console.log(`App listening on port ${port}`);
