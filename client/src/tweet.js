@@ -19,8 +19,6 @@ export default class Tweet {
             data: {}
         };
 
-
-
         tweet.view = {
 
             isShowOptions: false,

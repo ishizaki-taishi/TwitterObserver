@@ -7,6 +7,55 @@
 
     <app-header></app-header>
 
+
+
+    <main fill-height>
+        <v-content>
+            <v-container>
+
+
+
+                <v-layout row>
+                    <v-flex xs16>
+
+                        <v-card class="grid" flat>
+
+
+                            <h5>監視ツイート一覧</h5>
+
+                            <v-container fluid grid-list-sm>
+                                <v-layout row wrap>
+                                    <v-flex xs4 v-for="tweet in tweets" :key="1">
+
+                                        <app-grid-card :tweet="tweet"></app-grid-card>
+
+                                    </v-flex>
+                                </v-layout>
+                            </v-container>
+
+                            <h5>ハッシュタグ検索一覧</h5>
+
+                            <v-container fluid grid-list-sm>
+                                <v-layout row wrap>
+                                    <v-flex xs4 v-for="tweet in tweets" :key="1">
+
+                                        <app-grid-card :tweet="tweet"></app-grid-card>
+
+                                    </v-flex>
+                                </v-layout>
+                            </v-container>
+
+
+                        </v-card>
+                    </v-flex>
+                </v-layout>
+
+            </v-container>
+        </v-content>
+    </main>
+
+    <!--
+
     <main fill-height>
         <v-content>
             <v-container>
@@ -28,6 +77,7 @@
         </v-content>
     </main>
 
+-->
 
     <v-btn fab bottom right class="pink" dark fixed @click.stop="dialog = !dialog">
         <v-icon>add</v-icon>
@@ -45,6 +95,7 @@ import AppTable from './Table.vue';
 import AppHeader from './Header.vue';
 import AppNavigation from './Navigation.vue';
 import AppCard from './Card.vue';
+import AppGridCard from './GridCard.vue';
 
 
 export default {
@@ -67,6 +118,7 @@ export default {
         AppHeader,
         AppNavigation,
         AppCard,
+        AppGridCard
     },
 
 
@@ -88,6 +140,10 @@ export default {
 <style>
 .twi_con {
     overflow: hidden;
+    max-height: 30vh;
+    border: solid 2px #eee;
+    overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 twitterwidget {

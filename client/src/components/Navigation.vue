@@ -12,19 +12,9 @@
             </v-toolbar>
             -->
 
-
-    <v-divider></v-divider>
     <v-list dense class="pt-0">
-        <v-list-tile v-for="item in tweets" :key="item.title" @click="">
-            <v-list-tile-action>
-                <v-icon>info</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>
-                <v-list-tile-title>{{ item.id }}</v-list-tile-title>
-            </v-list-tile-content>
-        </v-list-tile>
 
-        <v-divider></v-divider>
+        <br v-for="i in 4">
 
         <v-list-tile :key="1" @click="">
             <v-list-tile-action>
@@ -39,6 +29,17 @@
         <v-divider></v-divider>
 
         <v-subheader class="mt-3 grey--text text--darken-1">TWEETS</v-subheader>
+
+        <v-list-tile v-for="item in tweets" :key="item.title" @click="">
+            <v-list-tile-action>
+                <v-icon>repeat</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+                <v-list-tile-title>{{ item.id }}</v-list-tile-title>
+            </v-list-tile-content>
+        </v-list-tile>
+
+        <v-subheader class="mt-3 grey--text text--darken-1">HASHTAG</v-subheader>
 
         <v-list-tile v-for="item in tweets" :key="item.title" @click="">
             <v-list-tile-action>
@@ -85,19 +86,14 @@ export default {
         tweets: Array
     },
 
-    data() {
-        return {
-            items: [
+    data: () => ({
+        items: [
 
+            { icon: 'settings', text: '設定' },
+            { icon: 'help', text: 'ヘルプ' },
+        ]
 
-
-
-                { icon: 'settings', text: '設定' },
-                { icon: 'help', text: 'ヘルプ' },
-                { icon: 'help', text: 'ハッシュタグ' }
-            ]
-        };
-    }
+    })
 
 }
 </script>

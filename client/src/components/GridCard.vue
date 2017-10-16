@@ -1,35 +1,23 @@
 <template>
-<v-card>
-
-    <v-layout justify-center align-center>
-
-        <v-flex xs3>
+<v-container grid-list-xl text-xs-center>
+    <v-layout row wrap>
+        <v-flex xs12>
 
             <div class="twi_con">
                 <Tweet :id="tweet.id"></Tweet>
             </div>
+
         </v-flex>
 
-        <v-flex xs8 offset-sm1>
+        <v-flex xs12>
 
-            <h2>{{ tweet.id }}</h2>
+            <v-btn block flat color="secondary" dark>{{ tweet.id }}</v-btn>
 
-            <v-btn color="error" dark large @click.native.stop="dialog = true" @click="lottery">抽選</v-btn>
-            <v-btn color="error" dark large @click.native.stop="dialog = true" @click="lotteryN">Large Button</v-btn>
-            <v-divider></v-divider>
-
-            <v-btn color="green" dark large>Spreadsheet</v-btn>
-
-
-
-            <app-table :users="tweet.retweeters"></app-table>
         </v-flex>
 
-        <app-lottery :show="dialog"></app-lottery>
 
     </v-layout>
-
-</v-card>
+</v-container>
 </template>
 
 
